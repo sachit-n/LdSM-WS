@@ -2,8 +2,8 @@
 cd ../build
 
 # data set name and path for loading data and saving label
-name=amazonCat13
-dataPath=../data2/$name/
+name=amz13
+dataPath=../data2/amazonCat13/
 labelPath=../results/label_$name.dat
 
 num_t=5
