@@ -149,7 +149,7 @@ void DataLoader::prepareLabelData(vector<int> labelPoint, vector<int> labelDim) 
 
     int nbOfPoint = labelPoint[labelPoint.size() - 1];
 
-    cerr<<m_kind<<" num dims: "<<m_dim<<endl;
+    cerr<<m_kind<<" num classes: "<<m_nbOfClasses<<endl;
 
     size_t iter = 0;
     for (int i = 1; i <= nbOfPoint; i++)  {
