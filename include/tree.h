@@ -35,11 +35,11 @@ public:
 	
 	void setParams(TreeParams params) { m_params = params; };
 
-	void buildTree(const DataLoader &trData, const DataLoader &trLabel);
+	void buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, const DataLoader &labelFeatures);
 	
 	void normalizeLableHist();
 
-    void testBatch(const DataLoader &teData);
+    void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures);
 
 	Varray<float> testData(int idx, const DataLoader &teData, 
 		const vector<Varray<float>> &meanDataLabel) const;

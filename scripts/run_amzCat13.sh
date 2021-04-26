@@ -6,11 +6,11 @@ name=amz13
 dataPath=../data2/amazonCat13/
 labelPath=../results/label_$name.dat
 
-num_t=5
+num_t=1
 m=2
 nmax=2000
 epoch=5
-lr=0.2
+lr=0.1
 l1=1
 l2=2
 muF=true
