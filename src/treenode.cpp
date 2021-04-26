@@ -366,7 +366,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 		}
 		for (int j = 0; j < embSize; j++) {
 			if (fabs(m_weight1[m][j]) < weightTreshold) {
-				m_weight1[m][j] = 0.f;
+				m_weight2[m][j] = 0.f;
 			}
 		}
 	}
