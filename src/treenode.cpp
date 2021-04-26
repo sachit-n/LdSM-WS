@@ -134,11 +134,12 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 	}
 
 	const float weightMag = 1.f / m_params->d;
+	const float weightMag2 = 1.f / m_params->embSize;
 	for (int m = 0; m < m_params->m; m++) {
 		for (int j = 0; j < d; j++)
 			m_weight1[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag;
 		for (int j = 0; j < embSize; j++)
-			m_weight2[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag;
+			m_weight2[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag2;
 	}
 
 	int dataCounter = 0; 
@@ -319,13 +320,13 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			const vector<float>& dataPointValues2 = data2.getDataValues();
 			for (int m = 0; m < m_params->m; m++) {
 				
-				float dotProduct2 = data2.dot(m_weight1[m]);
+				float dotProduct2 = data2.dot(m_weight2[m]);
 				float gradient_const2 = calcGradient(yhat[m], dotProduct2);
 				for (size_t i = 0; i < dataPointIndeces2.size(); i++) {
-					int idx2 = dataPointIndeces2[i];
-					float val2 = dataPointValues2[i];
-					float gradient2 = gradient_const2 * val2;
-					m_weight2[m][idx2] -= alpha * gradient2;
+					int idx = dataPointIndeces2[i];
+					float val = dataPointValues2[i];
+					float gradient2 = gradient_const2 * val;
+					m_weight2[m][idx] -= alpha * gradient2;
 				}
 			}
 			for (int m = 0; m < m_params->m; m++) {
@@ -354,6 +355,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 	}
 
 	const float weightTreshold = weightMag;
+	const float weightTreshold2 = weightMag2;
 
 	for (int m = 0; m < m_params->m; m++) {
 		for (int j = 0; j < d; j++) {
@@ -365,7 +367,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			}
 		}
 		for (int j = 0; j < embSize; j++) {
-			if (fabs(m_weight1[m][j]) < weightTreshold) {
+			if (fabs(m_weight2[m][j]) < weightTreshold2) {
 				m_weight2[m][j] = 0.f;
 			}
 		}
@@ -578,6 +580,7 @@ DataPoint TreeNode::combineEmbeddings(const DataPoint& labels, const DataLoader&
         const vector<float> labelFeature = labelFeatures.getDataPoint(k).getDataValues(); //embedding of class index . ToDo - Test this works as expected
         std::transform (lfValues.begin(), lfValues.end()-1, labelFeature.begin(), lfValues.begin(), std::plus<float>()); // adding embedding of label l to lfValues vector
     }
+	cerr<<endl;
 
 	// Calculating the norm of the combined label feature vector, and dividing lfValues by its norm. ToDo - Test it works as expected
 	float lfNorm = sqrt(inner_product(lfValues.begin(), lfValues.end(), lfValues.begin(), 0.0L));
