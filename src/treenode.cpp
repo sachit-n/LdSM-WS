@@ -330,7 +330,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 				}
 			}
 			for (int m = 0; m < m_params->m; m++) {
-					newDotProduct2[m] = data2.dot(m_weight1[m]);
+					newDotProduct2[m] = data2.dot(m_weight2[m]);
 				}
 			// Take the sum of the two dot products	
 			for (int m = 0; m < m_params->m; m++) {
@@ -511,7 +511,9 @@ void TreeNode::testBatch(const DataLoader &teData, const DataLoader &teRevLabel,
 					const DataPoint& data = teData.getDataPoint(m_dataIndex[index]);
 					DataPoint revLabels = teRevLabel.getDataPoint(m_dataIndex[index]);
 					DataPoint data2 = combineEmbeddings(revLabels, labelFeatures);
-					dotProduct = m_params->c1*(data.dot(m_weight1[m])) + m_params->c2*(data2.dot(m_weight2[m]));
+					float dotProduct1 = data.dot(m_weight1[m]);
+					float dotProduct2 = data2.dot(m_weight2[m]);
+					dotProduct = m_params->c1*dotProduct1 + m_params->c2*dotProduct2;
 				}
 				else {
 					DataPoint data = teData.getDataPoint(m_dataIndex[index]);
@@ -580,7 +582,6 @@ DataPoint TreeNode::combineEmbeddings(const DataPoint& labels, const DataLoader&
         const vector<float> labelFeature = labelFeatures.getDataPoint(k).getDataValues(); //embedding of class index . ToDo - Test this works as expected
         std::transform (lfValues.begin(), lfValues.end()-1, labelFeature.begin(), lfValues.begin(), std::plus<float>()); // adding embedding of label l to lfValues vector
     }
-	cerr<<endl;
 
 	// Calculating the norm of the combined label feature vector, and dividing lfValues by its norm. ToDo - Test it works as expected
 	float lfNorm = sqrt(inner_product(lfValues.begin(), lfValues.end(), lfValues.begin(), 0.0L));
