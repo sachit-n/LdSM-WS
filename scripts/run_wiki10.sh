@@ -10,7 +10,7 @@ num_t=5
 m=4
 nmax=2000
 epoch=5
-lr=0.0001
+lr=0.1
 l1=1
 l2=2
 muF=true
@@ -20,7 +20,7 @@ entropy=true
 sparse=true
 c1=1
 c2=1
-revpct=0.2
+revpct=0.8
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));

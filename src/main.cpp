@@ -63,16 +63,16 @@ int main(int argc, char* argv[])
     {
         cxxopts::Options options(argv[0], "Multilabel Options");
         options.add_options()
-            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("2000"))
+            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("100"))
             ("r1", "selecting r1 number of labels", cxxopts::value<int>()->default_value("1"))
             ("r2", "selecting r2 number of labels", cxxopts::value<int>()->default_value("3"))
             ("r3", "selecting r3 number of labels", cxxopts::value<int>()->default_value("5"))
             ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("2"))
             ("lr", "learning rate", cxxopts::value<float>()->default_value("0.1"))
-            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/amz13samp/"))
-            ("name", "name of data set", cxxopts::value<string>()->default_value("amz13"))
-            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/amz13s.dat"))
-            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/amz13s.dat"))
+            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/wiki10samp/"))
+            ("name", "name of data set", cxxopts::value<string>()->default_value("wiki10"))
+            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
+            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
             ("loadonly", "flag for loading the labels", cxxopts::value<bool>()->default_value("false"))
             ("mary", "arity of the tree", cxxopts::value<int>()->default_value("4"))
             ("l1", "lambda1: both term in the objective", cxxopts::value<float>()->default_value("1"))
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
             ("seed", "random number generator seed", cxxopts::value<int>()->default_value("0"))
             ("treeid", "tree ID", cxxopts::value<int>()->default_value("0"))
             ("ens", "ensemble size", cxxopts::value<int>()->default_value("1"))
-            ("revpct", "reveal percent of labels", cxxopts::value<string>()->default_value("0.2"))
+            ("revpct", "reveal percent of labels", cxxopts::value<string>()->default_value("0.8"))
             ("c1", "weight of regressor 1 (user/document features)", cxxopts::value<int>()->default_value("1"))
             ("c2", "weight of regressor 2 (item/label features)", cxxopts::value<int>()->default_value("0"))
             ;
@@ -120,6 +120,7 @@ int main(int argc, char* argv[])
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
         revpct = result["revpct"].as<string>();
+        cerr<<revpct<<endl;
     }
     catch (const cxxopts::OptionException& e)
     {
@@ -223,7 +224,7 @@ int main(int argc, char* argv[])
     Evaluator teEvaluateReg;
     vector<ScoreValue> teScoreValueReg;
     vector<int> R = { R1, R2, R3 };
-    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabel, teLabelRev, teLabelEstPair, rootLabelHist, R);
+    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabel, teRevLabel, teLabelEstPair, rootLabelHist, R);
 
     cout << dataSetName << ", nmax = "
          << params.nMax << ", lr = " << params.alpha << ", m = " << params.m << ", e = " << params.epochs 

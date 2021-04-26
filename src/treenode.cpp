@@ -552,15 +552,10 @@ void TreeNode::addHistogram(labelEst& labelHistogramSum, int leafCount, const ve
         int idx = m_NormalLabelHistogramSparse[i].first;
         float val = m_NormalLabelHistogramSparse[i].second;
 		if (find(revLabels.begin(), revLabels.end(), idx) != revLabels.end()) {
-        	continue;
+        	// val = val*0.1;
+			continue;
 		}
 		labelHistogramSum.regular[idx] += (val / leafCount);
-		// while (revLabelsIx<k and revLabels[revLabelIx]<val) {
-		// 	revLabelIx += 1;
-		// }
-		// if(revLabelIx!=val) {
-        // 	labelHistogramSum.regular[idx] += (val / leafCount);
-		// }
     }
 }
 
