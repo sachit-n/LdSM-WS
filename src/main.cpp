@@ -172,8 +172,10 @@ int main(int argc, char* argv[])
 		
         high_resolution_clock::time_point start_test = high_resolution_clock::now();
         tree.testBatch(teData, teRevLabel, labelFeatures);
+        vector<int> revLabels;
         for (int i = 0; i < teData.size(); i++) {
-			teLabelEst.push_back(tree.testData(i, teData, meanDataLabel));
+            revLabels = teRevLabel.getDataPoint(i).getLabelVector();
+			teLabelEst.push_back(tree.testData(i, teData, meanDataLabel, revLabels));
         }
         high_resolution_clock::time_point end_test = high_resolution_clock::now();
         teTime = duration_cast<microseconds>(end_test - start_test).count() / 1000000.f;
@@ -221,7 +223,7 @@ int main(int argc, char* argv[])
     Evaluator teEvaluateReg;
     vector<ScoreValue> teScoreValueReg;
     vector<int> R = { R1, R2, R3 };
-    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabel, teLabelEstPair, rootLabelHist, R);
+    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabel, teLabelRev, teLabelEstPair, rootLabelHist, R);
 
     cout << dataSetName << ", nmax = "
          << params.nMax << ", lr = " << params.alpha << ", m = " << params.m << ", e = " << params.epochs 

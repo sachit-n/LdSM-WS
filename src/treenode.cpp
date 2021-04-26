@@ -545,11 +545,22 @@ void TreeNode::testBatch(const DataLoader &teData, const DataLoader &teRevLabel,
     m_dataIndex.shrink_to_fit();
 }
 
-void TreeNode::addHistogram(labelEst& labelHistogramSum, int leafCount) const {
+void TreeNode::addHistogram(labelEst& labelHistogramSum, int leafCount, const vector<int> &revLabels) const {
+	int revLabelIx = 0;
+	int k = revLabels.size();
     for (size_t i = 0; i < m_NormalLabelHistogramSparse.size(); i++) {
         int idx = m_NormalLabelHistogramSparse[i].first;
         float val = m_NormalLabelHistogramSparse[i].second;
-        labelHistogramSum.regular[idx] += (val / leafCount);
+		if (find(revLabels.begin(), revLabels.end(), idx) != revLabels.end()) {
+        	continue;
+		}
+		labelHistogramSum.regular[idx] += (val / leafCount);
+		// while (revLabelsIx<k and revLabels[revLabelIx]<val) {
+		// 	revLabelIx += 1;
+		// }
+		// if(revLabelIx!=val) {
+        // 	labelHistogramSum.regular[idx] += (val / leafCount);
+		// }
     }
 }
 
