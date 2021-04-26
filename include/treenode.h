@@ -43,12 +43,12 @@ private:
 	TreeParams *m_params;
     int m_depth;
     vector<int> m_dataIndex; // data index of train data reaching to a node.
-    vector<Varray<float>> m_weightSparse;
+    vector<Varray<float>> m_weightSparse1;
     vector<Varray<float>> m_weightSparse2;
     vector<float> m_mean;
     vector<float> m_std;
 
-	static vector<vector<float>> m_weight;
+	static vector<vector<float>> m_weight1;
     static vector<vector<float>> m_weight2; //Each child node has two regressors
 	static vector<int> m_lastUpdate;
 	static vector<int> m_dataClassCounter;

@@ -74,8 +74,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
             if (!m_params.sparse) {
                 m_nodes[n].meanStdCalc(trData);
             }
-            m_nodes[n].meanStdCalc(labelFeatures);
-
+            // m_nodes[n].meanStdCalc(labelFeatures);
             m_nodes[n].weightUpdate(trData, trLabel, trRevLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
    
             int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, trRevLabel, labelFeatures, N, m_nodes);

@@ -69,10 +69,10 @@ int main(int argc, char* argv[])
             ("r3", "selecting r3 number of labels", cxxopts::value<int>()->default_value("5"))
             ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("2"))
             ("lr", "learning rate", cxxopts::value<float>()->default_value("0.1"))
-            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/wiki10/"))
-            ("name", "name of data set", cxxopts::value<string>()->default_value("wiki10"))
-            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/wiki10.dat"))
-            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/wiki10.dat"))
+            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/amz13samp/"))
+            ("name", "name of data set", cxxopts::value<string>()->default_value("amz13"))
+            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/amz13s.dat"))
+            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/amz13s.dat"))
             ("loadonly", "flag for loading the labels", cxxopts::value<bool>()->default_value("false"))
             ("mary", "arity of the tree", cxxopts::value<int>()->default_value("4"))
             ("l1", "lambda1: both term in the objective", cxxopts::value<float>()->default_value("1"))
@@ -116,8 +116,6 @@ int main(int argc, char* argv[])
         params.sparse = result["sparse"].as<bool>();
         params.c1 = result["c1"].as<int>();
         params.c2 = result["c2"].as<int>();
-        cerr<<"c1 is --> " <<params.c1<<endl;
-        cerr<<"c2 is --> " <<params.c2<<endl;
         seed = result["seed"].as<int>();
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
