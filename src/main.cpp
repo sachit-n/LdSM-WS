@@ -120,7 +120,6 @@ int main(int argc, char* argv[])
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
         revpct = result["revpct"].as<string>();
-        cerr<<revpct<<endl;
     }
     catch (const cxxopts::OptionException& e)
     {
