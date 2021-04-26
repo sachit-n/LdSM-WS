@@ -84,7 +84,7 @@ public:
     void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures, vector<TreeNode>& nodes, 
                          vector<vector<int>>& leafs);
 
-    void addHistogram(labelEst& labelHistogramSum, int leafCount) const;
+    void addHistogram(labelEst& labelHistogramSum, int leafCount, const vector<int> &revLabels) const;
 
     bool isLeaf() const {
         if (m_children.size() == 0)

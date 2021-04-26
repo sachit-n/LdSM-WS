@@ -47,7 +47,7 @@ class Evaluator {
 
 public:
 
-    vector<ScoreValue> evaluate(const DataLoader &trData, const DataLoader &trLabel, const labelEstPairAll &labelEsimatePairAll,
+    vector<ScoreValue> evaluate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel,  const labelEstPairAll &labelEsimatePairAll,
         const vector<int> &rootLabelHist, const vector<int> &R);
 
 };

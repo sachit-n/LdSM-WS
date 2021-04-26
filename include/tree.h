@@ -42,7 +42,7 @@ public:
     void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures);
 
 	Varray<float> testData(int idx, const DataLoader &teData, 
-		const vector<Varray<float>> &meanDataLabel) const;
+		const vector<Varray<float>> &meanDataLabel, const vector<int> &revLabels) const;
 
 	vector<int> getRootLabelHistogram() const { return rootLabelHistogram; }
 

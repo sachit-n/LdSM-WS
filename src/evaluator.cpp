@@ -2,7 +2,7 @@
 
 using namespace std;
 
-vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoader &trLabel, 
+vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, 
                                        const labelEstPairAll &labelEsimatePairAll,
                                        const vector<int> &rootLabelHist, const vector<int> &R) {
     
@@ -43,7 +43,23 @@ vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoade
     for (int i = 0; i < trData.size(); i++) {
         
         vector<pair<float, int> > labelEsimatePairRegular = labelEsimatePairAll.regular[i];
-        const vector<int>& labelTrue = trLabel.getDataPoint(i).getLabelVector();
+        vector<int> labelTrue = trLabel.getDataPoint(i).getLabelVector();
+        vector<int> labelRev = trRevLabel.getDataPoint(i).getLabelVector();
+        int p1 = 0; // labelTrue index
+        int p2 = 0; //labelRev index
+        
+        while(p1<labelTrue.size() and p2<labelRev.size()) {
+            if (labelTrue[p1]==labelRev[p2]) {
+                labelTrue.erase(labelTrue.begin()+p1); //It was revealed already, remove
+                p2 += 1;
+            }
+            else if (labelTrue[p1]<labelRev[p2]) {
+                p1 += 1;
+            }
+            else {
+                p2 += 1;
+            }
+        }
         
         vector<pair<float, int> > labelTruePair;
         for (size_t j = 0; j < labelTrue.size(); j++)

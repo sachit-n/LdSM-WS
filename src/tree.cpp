@@ -131,12 +131,12 @@ void Tree::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, con
 
 
 Varray<float> Tree::testData(int idx, const DataLoader &teData,
-	const vector<Varray<float>> &meanDataLabel) const {
+	const vector<Varray<float>> &meanDataLabel, const vector<int> &revLabels) const {
 	labelEst labelHistogramSum;
 	labelHistogramSum.regular.resize(m_params.k, 0.f);
 	int leafCount = m_leafs[idx].size();
 	for (int n = 0; n < leafCount; n++) {
-		m_nodes[m_leafs[idx][n]].addHistogram(labelHistogramSum, leafCount);
+		m_nodes[m_leafs[idx][n]].addHistogram(labelHistogramSum, leafCount, revLabels);
 	}
 	
 	if (m_params.beta != 1) {
