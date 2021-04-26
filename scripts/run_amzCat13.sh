@@ -6,10 +6,10 @@ name=amz13
 dataPath=../data2/amazonCat13/
 labelPath=../results/label_$name.dat
 
-num_t=50
-m=4
-nmax=2000
-epoch=20
+num_t=20
+m=2
+nmax=1000
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -36,10 +36,10 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
 
-num_t=50
-m=4
-nmax=2000
-epoch=20
+num_t=20
+m=2
+nmax=1000
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -65,10 +65,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
-nmax=2000
-epoch=20
+num_t=20
+m=2
+nmax=1000
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -94,10 +94,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
-nmax=2000
-epoch=20
+num_t=20
+m=2
+nmax=1000
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -123,10 +123,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
-nmax=2000
-epoch=20
+num_t=20
+m=2
+nmax=1000
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -152,10 +152,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
+num_t=20
+m=2
 nmax=2000
-epoch=20
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -181,10 +181,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
+num_t=20
+m=2
 nmax=2000
-epoch=20
+epoch=10
 lr=0.1
 l1=1
 l2=2
@@ -210,10 +210,10 @@ done
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t
 
-num_t=50
-m=4
+num_t=20
+m=2
 nmax=2000
-epoch=20
+epoch=10
 lr=0.1
 l1=1
 l2=2
