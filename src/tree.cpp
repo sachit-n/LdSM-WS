@@ -4,7 +4,7 @@ using namespace std;
 
 void savemu(vector<Varray<float>> mu, string strFile);
 
-void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
+void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, const DataLoader &labelFeatures)
 {
 
     m_nodes.resize(m_params.nMax, TreeNode(&m_params));
@@ -72,11 +72,13 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
         if (N < m_params.nMax - m_params.m + 1) {
 
             if (!m_params.sparse) {
-                m_nodes[n].meanStdCalc(trData, trLabel);
+                m_nodes[n].meanStdCalc(trData);
             }
-            m_nodes[n].weightUpdate(trData, trLabel, rootLabelHistogram, maxLabelRoot);
+            m_nodes[n].meanStdCalc(labelFeatures);
+
+            m_nodes[n].weightUpdate(trData, trLabel, trRevLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
    
-            int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, N, m_nodes);
+            int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, trRevLabel, labelFeatures, N, m_nodes);
 
             N += numOfChildren;
             if (N == 1 || N == 11 || N == 101 || N == 1001 || N == 10001 || N == 100001 || N == 300001)
@@ -116,7 +118,7 @@ void Tree::normalizeLableHist() {
 	}
 }
 
-void Tree::testBatch(const DataLoader &teData) {
+void Tree::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures) {
 	m_leafs.resize(teData.size());
 	vector<int> dataIndexRoot(teData.size());
 	for (int i = 0; i < teData.size(); i++)
@@ -124,7 +126,7 @@ void Tree::testBatch(const DataLoader &teData) {
 	m_root->setDataIndex(dataIndexRoot);
 
 	for (size_t n = 0; n < m_nodes.size(); n++) {
-		m_nodes[n].testBatch(teData, m_nodes, m_leafs);
+		m_nodes[n].testBatch(teData, teRevLabel, labelFeatures, m_nodes, m_leafs);
 	}
 }
 

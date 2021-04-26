@@ -53,8 +53,6 @@ DataLoader::DataLoader(string dataSetPath, bool trainFlag, const string& kind, c
         cerr<<labelPoint.size()<<endl;
         cerr<<labelDim.size()<<endl;
         prepareLabelData(labelPoint, labelDim); //Creates m_datapoints vector
-        cerr<<"Label nRows"<<endl;
-        cerr<<m_dataPoints.size()<<endl;
     }
 
     else if (m_kind=="revealed_labels") {

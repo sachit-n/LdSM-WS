@@ -63,18 +63,18 @@ int main(int argc, char* argv[])
     {
         cxxopts::Options options(argv[0], "Multilabel Options");
         options.add_options()
-            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("1000"))
+            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("2000"))
             ("r1", "selecting r1 number of labels", cxxopts::value<int>()->default_value("1"))
             ("r2", "selecting r2 number of labels", cxxopts::value<int>()->default_value("3"))
             ("r3", "selecting r3 number of labels", cxxopts::value<int>()->default_value("5"))
-            ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("1"))
+            ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("2"))
             ("lr", "learning rate", cxxopts::value<float>()->default_value("0.1"))
-            ("path", "path of data set", cxxopts::value<string>()->default_value("../data/wiki10samp/"))
+            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/wiki10/"))
             ("name", "name of data set", cxxopts::value<string>()->default_value("wiki10"))
-            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
-            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
+            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/wiki10.dat"))
+            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/wiki10.dat"))
             ("loadonly", "flag for loading the labels", cxxopts::value<bool>()->default_value("false"))
-            ("mary", "arity of the tree", cxxopts::value<int>()->default_value("2"))
+            ("mary", "arity of the tree", cxxopts::value<int>()->default_value("4"))
             ("l1", "lambda1: both term in the objective", cxxopts::value<float>()->default_value("1"))
             ("l2", "lambda2: purity term in the objective", cxxopts::value<float>()->default_value("2"))
             ("muFlag", "flag for saving mu (meanDataLabel) for tail label", cxxopts::value<bool>()->default_value("false"))
@@ -89,6 +89,8 @@ int main(int argc, char* argv[])
             ("treeid", "tree ID", cxxopts::value<int>()->default_value("0"))
             ("ens", "ensemble size", cxxopts::value<int>()->default_value("1"))
             ("revpct", "reveal percent of labels", cxxopts::value<string>()->default_value("0.2"))
+            ("c1", "weight of regressor 1 (user/document features)", cxxopts::value<int>()->default_value("1"))
+            ("c2", "weight of regressor 2 (item/label features)", cxxopts::value<int>()->default_value("0"))
             ;
         auto result = options.parse(argc, argv);
         params.nMax = result["nmax"].as<int>();
@@ -112,6 +114,10 @@ int main(int argc, char* argv[])
         params.exampleLearn = result["xx"].as<bool>();
         params.entropyLoss = result["entropyLoss"].as<bool>();
         params.sparse = result["sparse"].as<bool>();
+        params.c1 = result["c1"].as<int>();
+        params.c2 = result["c2"].as<int>();
+        cerr<<"c1 is --> " <<params.c1<<endl;
+        cerr<<"c2 is --> " <<params.c2<<endl;
         seed = result["seed"].as<int>();
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
@@ -135,7 +141,7 @@ int main(int argc, char* argv[])
 	DataLoader teData(dataSetPath + dataSetName, false, "features");
     DataLoader teLabel(dataSetPath + dataSetName, false, "labels");
     DataLoader teRevLabel(dataSetPath + dataSetName, false, "revealed_labels", revpct);
-    DataLoader teLabelFeatures(dataSetPath + dataSetName, false, "label_embeddings", revpct);
+    DataLoader labelFeatures(dataSetPath + dataSetName, false, "label_embeddings");
 	cerr << "Loaded test data." << endl;
 
     labelEstPairAll teLabelEstPair;
@@ -149,12 +155,13 @@ int main(int argc, char* argv[])
 
         params.d = max(teData.getDim(), trData.getDim());
         params.k = trLabel.getNbOfClasses();
+        params.embSize = labelFeatures.getDim(); // storing label dimension
 
         Tree tree;
         tree.setParams(params);
 
         high_resolution_clock::time_point start_train = high_resolution_clock::now();
-        tree.buildTree(trData, trLabel);
+        tree.buildTree(trData, trLabel, trRevLabel, labelFeatures);
 		tree.normalizeLableHist();
         high_resolution_clock::time_point end_train = high_resolution_clock::now();
         trTime = duration_cast<microseconds>(end_train - start_train).count() / 1000000.f;
@@ -166,7 +173,7 @@ int main(int argc, char* argv[])
 			meanDataLabel = loadmu("../results/mu_" + dataSetName); // meanDataLabel = tree.getMeanDataLabel(); 
 		
         high_resolution_clock::time_point start_test = high_resolution_clock::now();
-        tree.testBatch(teData);
+        tree.testBatch(teData, teRevLabel, labelFeatures);
         for (int i = 0; i < teData.size(); i++) {
 			teLabelEst.push_back(tree.testData(i, teData, meanDataLabel));
         }
@@ -222,7 +229,7 @@ int main(int argc, char* argv[])
          << params.nMax << ", lr = " << params.alpha << ", m = " << params.m << ", e = " << params.epochs 
          << ", l1 = " << params.l1 << ", l2 = " << params.l2 
          << ", beta = " << params.beta << ", gamma = " << params.gamma 
-         << ", tree id = " << treeId << ", #trees = " << nbTrees << "\n"
+         << ", tree id = " << treeId << ", seed = " << seed << ", #trees = " << nbTrees << ", #revpct = " << revpct << ", #c1 = " << params.c1 << ", #c2 = " << params.c2 << "\n"
          << "-----------------------------------------------------------\n"
          << "precision: " << teScoreValueReg[0].precision * 100 << ", "
          << teScoreValueReg[1].precision * 100 << ", "

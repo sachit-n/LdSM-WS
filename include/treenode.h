@@ -20,6 +20,7 @@ struct TreeParams {
     int m;
     int k;
     int d;
+    int embSize;
     int nMax;
     int epochs;
     float gamma;
@@ -30,6 +31,8 @@ struct TreeParams {
     float coefL1;
     float coefL2;
     bool exampleLearn;
+    int c1; //weight of regressor 1 that is based on document features
+    int c2; //weight of regressor 2 that is based on label features
 };
 
 class TreeNode {
@@ -41,10 +44,12 @@ private:
     int m_depth;
     vector<int> m_dataIndex; // data index of train data reaching to a node.
     vector<Varray<float>> m_weightSparse;
+    vector<Varray<float>> m_weightSparse2;
     vector<float> m_mean;
     vector<float> m_std;
 
 	static vector<vector<float>> m_weight;
+    static vector<vector<float>> m_weight2; //Each child node has two regressors
 	static vector<int> m_lastUpdate;
 	static vector<int> m_dataClassCounter;
 	static vector<float> m_probAllVector;
@@ -66,18 +71,18 @@ public:
 
 	void initialize();
 
-    void meanStdCalc(const DataLoader &trData, const DataLoader &trLabel);
+    void meanStdCalc(const DataLoader &trData);
 
-	void weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
+	void weightUpdate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &teRevLabel, const DataLoader &labelFeatures, 
 		vector<int>& rooLabelHist, int maxLabelRoot);
 
-	int makeChildren(const DataLoader &trData, const DataLoader &trLabel,
+	int makeChildren(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &teRevLabel, const DataLoader &labelFeatures,
 		const int& N, vector<TreeNode>& nodes);
 		
     void destroyChildren(vector<TreeNode>& nodes); 
 
-    void testBatch(const DataLoader &teData, vector<TreeNode>& nodes,
-                   vector<vector<int>>& leafs);
+    void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures, vector<TreeNode>& nodes, 
+                         vector<vector<int>>& leafs);
 
     void addHistogram(labelEst& labelHistogramSum, int leafCount) const;
 
@@ -103,5 +108,7 @@ public:
     void setDataIndex(vector<int> x) { m_dataIndex = x; }
 
     void setLabelHistogramSparse(vector<int> x) { m_labelHistogramSparse.set(x); }
+
+    DataPoint combineEmbeddings(const DataPoint& labels, const DataLoader& labelFeatures);
 
 };
