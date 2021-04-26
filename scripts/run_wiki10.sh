@@ -10,21 +10,24 @@ num_t=5
 m=4
 nmax=2000
 epoch=5
-lr=0.2
-l1=2
-l2=4
+lr=0.0001
+l1=1
+l2=2
 muF=true
 beta=1
 gamma=0.0001 
 entropy=true
 sparse=true
+c1=1
+c2=1
+revpct=0.2
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
 do
 ./stream --treeid=$i --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath  \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=1
+--sparse=$sparse --entropyLoss=$entropy --ens=1 --c1=$c1 --c2=$c2 --revpct=$revpct
 done
 
 # loading the labels
