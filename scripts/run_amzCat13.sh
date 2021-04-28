@@ -33,7 +33,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 
 num_t=20
@@ -63,7 +63,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -92,7 +92,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -121,7 +121,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -150,7 +150,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -179,7 +179,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -208,7 +208,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
 m=2
@@ -237,7 +237,7 @@ done
 # loading the labels
 ./stream --loadonly=true --treeid=0 --seed=$i --name=$name --path=$dataPath --savelabel=$labelPath --loadlabel=$labelPath \
 --mary=$m --nmax=$nmax --epochs=$epoch --lr=$lr --l1=$l1 --l2=$l2 --beta=$beta --gamma=$gamma --muFlag=$muF \
---sparse=$sparse --entropyLoss=$entropy --ens=$num_t
+--sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 
 cd -
