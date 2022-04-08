@@ -117,6 +117,8 @@ public:
 
     void setDataIndex(vector<int> x) { m_dataIndex = x; }
 
+    int getDataIndex(int ix) { return m_dataIndex[ix]; }
+
     void setLabelHistogramSparse(vector<int> x) { m_labelHistogramSparse.set(x); }
 
     float getNDCG(vector<int*>& labelToRank, const vector<int>& labelVector);

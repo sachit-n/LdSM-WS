@@ -69,6 +69,13 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
         int n = (*--nodesArray.end()).second; // the last element in the multimap has the maximum priority
         nodesArray.erase(--nodesArray.end());
 
+        if (n==0) {
+            cerr<<"first two indices of root"<<endl;
+            cerr<<m_nodes[n].getDataIndex(0)<<endl;
+            cerr<<m_nodes[n].getDataIndex(1)<<endl;
+            cerr<<"-----"<<endl;
+        }
+
         if (N < m_params.nMax - m_params.m + 1) {
 
             if (!m_params.sparse) {

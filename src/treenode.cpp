@@ -265,6 +265,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
         int tStep = 0;
         for (int e = 0; e < m_params->epochs; e++) {
             for (size_t index = 0; index < m_dataIndex.size(); index++) {
+                if (gen()) continue;
                 tStep++;
 
                 float lrWeight = 0.0;
