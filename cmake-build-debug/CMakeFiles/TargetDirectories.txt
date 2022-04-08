@@ -1,0 +1,3 @@
+/Users/sachitnagpal/Library/Mobile Documents/com~apple~CloudDocs/nyu/thesis/thesis2/repos/LdSM-WS/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/sachitnagpal/Library/Mobile Documents/com~apple~CloudDocs/nyu/thesis/thesis2/repos/LdSM-WS/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/sachitnagpal/Library/Mobile Documents/com~apple~CloudDocs/nyu/thesis/thesis2/repos/LdSM-WS/cmake-build-debug/CMakeFiles/stream.dir

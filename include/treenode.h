@@ -7,6 +7,7 @@
 #include <forward_list>
 #include <string>
 #include <functional>
+#include <unordered_map>
 
 #include "datapoint.h"
 #include "dataloader.h"
@@ -54,6 +55,20 @@ private:
 	static vector<float> m_nNol;
 
 	static vector<vector<int>> m_children_labelHistogram;
+
+    // For tracking label rank of each child node
+    static vector<vector<int>> m_childrenSortedHist; //sorted hist counts of child nodes
+    static vector<vector<int>> m_childrenIxToLabel; //maps indexes of sorted hist
+    static vector<vector<int>> m_childrenLabelToIx; //label to index mapping to position of label in sorted hist counts
+    static vector<vector<int*>> m_childrenLabelToRank; //label to rank mapping
+    static vector<unordered_map<int, int>> m_childrenHistToIx; //maps hist count to first index with the count
+
+    // For computing label rank of this (parent) node
+    static vector<int> m_sortedHist; //sorted hist counts
+    static vector<int> m_ixToLabel; //index to label mapping for sorted hist counts
+    static vector<int> m_labelToIx; //maps label to its index in the sorted hist count
+    static vector<int*> m_labelToRank; //maps label to its rank. rank is a pointer. if there is tie, tied labels point to same address
+    static unordered_map<int, int> m_histToIx; //tracks the first index where each unique hist count is present. Allows updating ranks in O(1) / constant time
 
 public:
 
@@ -103,5 +118,9 @@ public:
     void setDataIndex(vector<int> x) { m_dataIndex = x; }
 
     void setLabelHistogramSparse(vector<int> x) { m_labelHistogramSparse.set(x); }
+
+    float getNDCG(vector<int*>& labelToRank, const vector<int>& labelVector);
+
+    void updateRanks(vector<int*>& labelToRank, vector<int>& labelToIx, vector<int>& ixToLabel, vector<int>& sortedHist, unordered_map<int, int>& histToIx, int label);
 
 };

@@ -13,6 +13,20 @@ vector<vector<float>> TreeNode::m_gNol;
 vector<float> TreeNode::m_nNol;
 vector<vector<int>> TreeNode::m_children_labelHistogram;
 
+//label rank variables of child nodes
+vector<vector<int>> TreeNode::m_childrenSortedHist;
+vector<vector<int>> TreeNode::m_childrenIxToLabel;
+vector<vector<int>> TreeNode::m_childrenLabelToIx;
+vector<vector<int*>> TreeNode::m_childrenLabelToRank;
+vector<unordered_map<int, int>> TreeNode::m_childrenHistToIx;
+
+//label rank variables of this node (parent)
+vector<int> TreeNode::m_sortedHist;
+vector<int> TreeNode::m_ixToLabel;
+vector<int> TreeNode::m_labelToIx;
+vector<int*> TreeNode::m_labelToRank;
+unordered_map<int, int> TreeNode::m_histToIx;
+
 void TreeNode::initialize() {
 	m_weight.clear();
 	m_lastUpdate.clear();
@@ -24,6 +38,19 @@ void TreeNode::initialize() {
 	m_nNol.clear();
 	m_children_labelHistogram.clear();
 
+    //rank variables
+    m_childrenSortedHist.clear();
+    m_childrenIxToLabel.clear();
+    m_childrenLabelToIx.clear();
+    m_childrenLabelToRank.clear();
+    m_childrenHistToIx.clear();
+
+    m_sortedHist.clear();
+    m_ixToLabel.clear();
+    m_labelToIx.clear();
+    m_labelToRank.clear();
+
+
 	m_weight.resize(m_params->m, vector<float>(m_params->d, 0.f));
 	m_lastUpdate.resize(m_params->d, 0);
 	m_dataClassCounter.resize(m_params->k, 0); // number of data points in each class at each node
@@ -34,6 +61,18 @@ void TreeNode::initialize() {
 	m_nNol.resize(m_params->m, 0.f);
 	m_children_labelHistogram.resize(m_params->m, vector<int>(m_params->k, 0));
 
+    //rank variables
+    m_childrenSortedHist.resize(m_params->m, vector<int>(m_params->k, 0));
+    m_childrenIxToLabel.resize(m_params->m, vector<int>(m_params->k));
+    m_childrenLabelToIx.resize(m_params->m, vector<int>(m_params->k));
+    m_childrenLabelToRank.resize(m_params->m, vector<int*>(m_params->k));
+    m_childrenHistToIx.resize(m_params->m, unordered_map<int, int>());
+
+    m_sortedHist.resize(m_params->k, 0);
+    m_ixToLabel.resize(m_params->k);
+    m_labelToIx.resize(m_params->k);
+    m_labelToRank.resize(m_params->k);
+//    m_histToIx[0] = 0;
 }
 
 void TreeNode::meanStdCalc(const DataLoader &trData, const DataLoader &trLabel) { // only for non-sparse data
@@ -105,233 +144,277 @@ void decayReg(float &weight, float coefL1, float coefL2, int stepsCount) {
 	weight *= decayL2;
 }
 
+void TreeNode::updateRanks(vector<int*>& labelToRank, vector<int>& labelToIx, vector<int>& ixToLabel, vector<int>& sortedHist, unordered_map<int, int>& histToIx, int label) {
+    int labelPos = labelToIx[label];
+    int oldCount = sortedHist[labelPos];
+    int newLabelPos = histToIx[oldCount];
+
+    assert (ixToLabel[labelPos]==label);
+    assert (newLabelPos<=labelPos);
+    assert (oldCount==sortedHist[newLabelPos]);
+
+    if (sortedHist[newLabelPos]==sortedHist[newLabelPos+1]) {
+        histToIx[oldCount] += 1;
+    }
+    else {
+        histToIx.erase(oldCount);
+    }
+
+    sortedHist[newLabelPos] += 1;
+    int swapLabel = ixToLabel[newLabelPos];
+    ixToLabel[newLabelPos] = label;
+    ixToLabel[labelPos] = swapLabel;
+    labelToIx[label] = newLabelPos;
+    labelToIx[swapLabel] = labelPos;
+    *labelToRank[swapLabel] += 1;
+
+    if (newLabelPos>0) assert (sortedHist[newLabelPos]<=sortedHist[newLabelPos-1]);
+
+    if ((newLabelPos==0)||(sortedHist[newLabelPos]<sortedHist[newLabelPos-1])) {
+        labelToRank[label] = new int;
+        *labelToRank[label] = newLabelPos;
+        histToIx[oldCount+1] = newLabelPos;
+    }
+    else {
+        labelToRank[label] = labelToRank[ixToLabel[newLabelPos-1]];
+    }
+}
+
+float TreeNode::getNDCG(vector<int*>& labelToRank, const vector<int>& labelVector) {
+    int labelSize = labelVector.size();
+    float nDCG = 0;
+    for (int l = 0; l < labelSize; l++) {
+        int k = labelVector[l];
+        int rank = *labelToRank[k]+1;
+        nDCG += 1/log2(1+rank);
+    }
+    return nDCG;
+}
+
 void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 	vector<int>& rooLabelHist, int maxLabelRoot) {
-	
-	std::function<float(int, float)> calcGradient;
-	if (m_params->entropyLoss)
-		calcGradient = gradEntropyLoss;
-	else
-		calcGradient = gradAbsoluteLoss;
 
-	int d = m_params->d; 
-	float clip = 1; // for clipping data.dot(weight)
+    std::function<float(int, float)> calcGradient;
+    if (m_params->entropyLoss)
+        calcGradient = gradEntropyLoss;
+    else
+        calcGradient = gradAbsoluteLoss;
 
-	if (m_params->coefL1 != 0 || m_params->coefL2 != 0)
-		fill(m_lastUpdate.begin(), m_lastUpdate.end(), 0);
-	fill(m_dataClassCounter.begin(), m_dataClassCounter.end(), 0);
-	fill(m_probAllVector.begin(), m_probAllVector.end(), 0.f);
-	fill(m_nNol.begin(), m_nNol.end(), 0.f);
-	for (int m = 0; m < m_params->m; m++) {
-		fill(m_sNol[m].begin(), m_sNol[m].end(), 0.f);
-		fill(m_gNol[m].begin(), m_gNol[m].end(), 0.f);
-		fill(m_probSingleVector[m].begin(), m_probSingleVector[m].end(), 0.f);
-	}
+    int d = m_params->d;
+    float clip = 1; // for clipping data.dot(weight)
 
-	const float weightMag = 1.f / m_params->d;
-	for (int m = 0; m < m_params->m; m++) {
-		for (int j = 0; j < d; j++)
-			m_weight[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag;
-	}
+    if (m_params->coefL1 != 0 || m_params->coefL2 != 0)
+        fill(m_lastUpdate.begin(), m_lastUpdate.end(), 0);
+    fill(m_dataClassCounter.begin(), m_dataClassCounter.end(), 0);
+    fill(m_probAllVector.begin(), m_probAllVector.end(), 0.f);
+    fill(m_nNol.begin(), m_nNol.end(), 0.f);
 
-	int dataCounter = 0; 
+    for (int m = 0; m < m_params->m; m++) {
+        fill(m_sNol[m].begin(), m_sNol[m].end(), 0.f);
+        fill(m_gNol[m].begin(), m_gNol[m].end(), 0.f);
+        fill(m_probSingleVector[m].begin(), m_probSingleVector[m].end(), 0.f);
 
-	float J; // objective function initialization
-	vector<int> yhat; // regressors' label
+        //rank variables
+        fill(m_childrenSortedHist[m].begin(), m_childrenSortedHist[m].end(), 0);
+        m_childrenHistToIx[m].clear();
+        m_childrenHistToIx[m][0] = 0;
+        int *initRank = new int(0);
+        for (int j = 0; j < m_params->k; j++) {
+            m_childrenIxToLabel[m][j] = j;
+            m_childrenLabelToIx[m][j] = j;
+            m_childrenLabelToRank[m][j] = initRank; //ToDo - diff pointers for diff childs
+        }
+    }
 
-	int tStep = 0;
-	for (int e = 0; e < m_params->epochs; e++) {
-		for (size_t index = 0; index < m_dataIndex.size(); index++) {
-			tStep++;
+    //ToDo - calculate parent node rank here
+    fill(m_sortedHist.begin(), m_sortedHist.end(), 0);
+    m_histToIx.clear();
+    m_histToIx[0] = 0;
+    int *initRankParent = new int(0);
+    for (int j = 0; j < m_params->k; j++) {
+        m_ixToLabel[j] = j;
+        m_labelToIx[j] = j;
+        m_labelToRank[j] = initRankParent;
+    }
 
-			float lrWeight = 0.0;
-			const vector<int>& labelVector = trLabel.getDataPoint(m_dataIndex[index]).getLabelVector();
-			int labelSize = labelVector.size();
-			for (int l = 0; l < labelSize; l++) {
-				int k = labelVector[l];
-				lrWeight += (float)maxLabelRoot / (float)rooLabelHist[k];
-				m_dataClassCounter[k]++;
-			}
-			dataCounter += labelSize;
-			float alpha = 0.0;
-			if (m_params->exampleLearn)
-				alpha = m_params->alpha * lrWeight;
-			else
-				alpha = m_params->alpha;
+    for (size_t index = 0; index < m_dataIndex.size(); index++) {
+        const vector<int> &labelVector = trLabel.getDataPoint(m_dataIndex[index]).getLabelVector();
+        int labelSize = labelVector.size();
+        for (int l = 0; l < labelSize; l++) {
+            int k = labelVector[l];
+            updateRanks(m_labelToRank, m_labelToIx, m_ixToLabel, m_sortedHist, m_histToIx, k);
+        }
+    }
 
-			// optimum parameters
-			float optJ = FLT_MAX;
-			float optJPurity = FLT_MAX;
-			vector<int> optYhat(m_params->m);
+        const float weightMag = 1.f / m_params->d;
+        for (int m = 0; m < m_params->m; m++) {
+            for (int j = 0; j < d; j++)
+                m_weight[m][j] = ((float) (rand() - RAND_MAX / 2) / RAND_MAX) * weightMag;
+        }
 
-			for (int s = 1; s < (1 << m_params->m); s++) {
-				vector<float> tmpProbAllVector(m_params->m, 0);
-				vector<vector<float>> tmpProbSingleVector(m_params->m, vector<float>(labelSize, 0.f));
-				vector<int> tmpYhat(m_params->m);
+        int dataCounter = 0;
 
-				for (int m = 0; m < m_params->m; m++) {
-					int a = (1 << m);
-					tmpYhat[m] = ((s & a) == 0) ? 0 : 1;
-					tmpProbAllVector[m] = (m_probAllVector[m] * (dataCounter - labelSize) +
-						labelSize * tmpYhat[m]) /
-						(float)dataCounter;
+        float J; // objective function initialization
+        vector<int> yhat(m_params->m); // regressors' label
+        auto gen = std::bind(std::uniform_int_distribution<>(0, 1), std::default_random_engine());
+        int tStep = 0;
+        for (int e = 0; e < m_params->epochs; e++) {
+            for (size_t index = 0; index < m_dataIndex.size(); index++) {
+                tStep++;
 
-					for (int l = 0; l < labelSize; l++) {
-						int k = labelVector[l];
-						tmpProbSingleVector[m][l] = (m_probSingleVector[m][k] *
-							(m_dataClassCounter[k] - 1) + tmpYhat[m]) /
-							(float)m_dataClassCounter[k];
-					}
-				} 
+                float lrWeight = 0.0;
+                const vector<int> &labelVector = trLabel.getDataPoint(m_dataIndex[index]).getLabelVector();
+                int labelSize = labelVector.size();
 
-				float tmpBalance = 0.0;
-				for (int m1 = 0; m1 < m_params->m; m1++) {
-					for (int m2 = m1 + 1; m2 < m_params->m; m2++) {
-						tmpBalance += abs(tmpProbAllVector[m1] - tmpProbAllVector[m2]);
-					}
-				}
+                float alpha = m_params->alpha;
 
-				float tmpBoth = 0.0;
-				for (int m = 0; m < m_params->m; m++)
-					tmpBoth += tmpProbAllVector[m];
-				tmpBoth -= 1.0;
-				if (tmpBoth < 0.0)
-					tmpBoth = -tmpBoth;
+                float maxNDCG = getNDCG(m_labelToRank, labelVector);
+                int max_m = -1;
 
-				float tmpJPurity = 0.0;
-				for (int l = 0; l < labelSize; l++) {
-					int k = labelVector[l];
-					float purity = 0.0;
-					for (int m1 = 0; m1 < m_params->m; m1++) {
-						for (int m2 = m1 + 1; m2 < m_params->m; m2++) {
-							float tmp = tmpProbSingleVector[m1][l] - tmpProbSingleVector[m2][l];
-							if (tmp < 0.0)
-								tmp = -tmp;
-							purity += tmp;
-						}
-					}
-					tmpJPurity += purity * ((float)m_dataClassCounter[k] / (float)dataCounter);
-				}
-				float tmpJ = tmpBalance + m_params->l1 * tmpBoth - m_params->l2 * tmpJPurity;
-				if (tmpJ == optJ && (s != (1 << m_params->m) - 1)) {
-					int r = rand() % 2;
-					if (r >= 1) {
-						optJ = tmpJ;
-						optJPurity = tmpJPurity;
-						optYhat = tmpYhat;
-					}
-				}
+                for (int m = 0; m < m_params->m; m++) {
+                    float nDCG = getNDCG(m_childrenLabelToRank[m], labelVector);
+                    if (nDCG == maxNDCG) {
+                        //randomly set max_m
+                        bool c = gen(); // generate random boolean with prob 0.5 of true and false
+                        if (c) max_m = m; // randomly send to one of the children if there is a tie
+                    } else if (nDCG > maxNDCG) {
+                        max_m = m;
+                        maxNDCG = nDCG;
+                    }
+                }
+                if (max_m == -1) { //parent node nDCG max - send to all children
+                    for (int mm = 0; mm < m_params->m; mm++) {
+                        yhat[mm] = 1;
+                        for (int l = 0; l < labelSize; l++) {
+                            int k = labelVector[l];
+                            updateRanks(m_childrenLabelToRank[mm], m_childrenLabelToIx[mm], m_childrenIxToLabel[mm],
+                                        m_childrenSortedHist[mm], m_childrenHistToIx[mm], k);
+                        }
+                    }
+                } else {
+                    for (int mm = 0; mm < m_params->m; mm++) {
+                        yhat[mm] = 0;
+                    }
+                    yhat[max_m] = 1;
+                    for (int l = 0; l < labelSize; l++) {
+                        int k = labelVector[l];
+                        updateRanks(m_childrenLabelToRank[max_m], m_childrenLabelToIx[max_m], m_childrenIxToLabel[max_m],
+                                    m_childrenSortedHist[max_m], m_childrenHistToIx[max_m], k);
+                    }
+                }
 
-				if (tmpJ < optJ) {
-					optJ = tmpJ;
-					optJPurity = tmpJPurity;
-					optYhat = tmpYhat;
-				}
-			}
+                vector<float> newDotProduct(m_params->m);
 
-			J = optJ;
-			yhat = optYhat;
+                if (m_params->sparse) {
+                    const DataPoint &dataNormal = trData.getDataPoint(m_dataIndex[index]);
+                    const vector<int> &dataPointIndeces = dataNormal.getDataIndeces();
+                    const vector<float> &dataPointValues = dataNormal.getDataValues();
 
-			vector<float> newDotProduct(m_params->m);
+                    for (int m = 0; m < m_params->m; m++) {
+                        for (size_t i = 0; i < dataPointIndeces.size(); i++) {
+                            int idx = dataPointIndeces[i];
+                            float val = dataPointValues[i];
+                            if (m_params->coefL1 != 0 || m_params->coefL2 != 0) {
+                                decayReg(m_weight[m][idx], m_params->coefL1, m_params->coefL2,
+                                         tStep - m_lastUpdate[idx]);
+                            }
+                            if (abs(val) > m_sNol[m][idx]) {
+                                m_weight[m][idx] = m_weight[m][idx] * m_sNol[m][idx] / abs(val);
+                                m_sNol[m][idx] = abs(val);
+                            }
+                        }
 
-			if (m_params->sparse) {
-				const DataPoint& dataNormal = trData.getDataPoint(m_dataIndex[index]);
-				const vector<int>& dataPointIndeces = dataNormal.getDataIndeces();
-				const vector<float>& dataPointValues = dataNormal.getDataValues();
+                        float dotProduct = dataNormal.dot(m_weight[m]);
 
-				for (int m = 0; m < m_params->m; m++) {
-					for (size_t i = 0; i < dataPointIndeces.size(); i++) {
-						int idx = dataPointIndeces[i];
-						float val = dataPointValues[i];
-						if (m_params->coefL1 != 0 || m_params->coefL2 != 0) {
-							decayReg(m_weight[m][idx], m_params->coefL1, m_params->coefL2, tStep - m_lastUpdate[idx]);
-						}
-						if (abs(val) > m_sNol[m][idx]) {
-							m_weight[m][idx] = m_weight[m][idx] * m_sNol[m][idx] / abs(val);
-							m_sNol[m][idx] = abs(val);
-						}
-					}
+                        for (size_t i = 0; i < dataPointIndeces.size(); i++) {
+                            int idx = dataPointIndeces[i];
+                            float val = dataPointValues[i];
+                            m_nNol[m] += (val * val) / (m_sNol[m][idx] * m_sNol[m][idx]);
+                        }
 
-					float dotProduct = dataNormal.dot(m_weight[m]);
+                        float gradient_const = calcGradient(yhat[m], dotProduct);
+                        for (size_t i = 0; i < dataPointIndeces.size(); i++) {
+                            int idx = dataPointIndeces[i];
+                            float val = dataPointValues[i];
+                            float gradient = gradient_const * val;
+                            m_gNol[m][idx] += (gradient * gradient);
+                            if (m_gNol[m][idx] != 0)
+                                m_weight[m][idx] -= alpha * sqrt(tStep / m_nNol[m]) * gradient /
+                                                    (m_sNol[m][idx] * sqrt(m_gNol[m][idx]));
+                        }
+                    }
+                    if (m_params->coefL1 != 0 || m_params->coefL2 != 0) {
+                        for (size_t i = 0; i < dataPointIndeces.size(); i++)
+                            m_lastUpdate[i] = tStep;
+                    }
 
-					for (size_t i = 0; i < dataPointIndeces.size(); i++) {
-						int idx = dataPointIndeces[i];
-						float val = dataPointValues[i];
-						m_nNol[m] += (val * val) / (m_sNol[m][idx] * m_sNol[m][idx]);
-					}
+                    for (int m = 0; m < m_params->m; m++) {
+                        newDotProduct[m] = dataNormal.dot(m_weight[m]);
+                    }
+                } else {
+                    DataPoint data = trData.getDataPoint(m_dataIndex[index]);
+                    DataPoint dataNormal = data.normal(m_mean, m_std);
+                    const vector<int> &dataPointIndeces = dataNormal.getDataIndeces();
+                    const vector<float> &dataPointValues = dataNormal.getDataValues();
 
-					float gradient_const = calcGradient(yhat[m], dotProduct);
-					for (size_t i = 0; i < dataPointIndeces.size(); i++) {
-						int idx = dataPointIndeces[i];
-						float val = dataPointValues[i];
-						float gradient = gradient_const * val;
-						m_gNol[m][idx] += (gradient * gradient);
-						if (m_gNol[m][idx] != 0)
-							m_weight[m][idx] -= alpha * sqrt(tStep / m_nNol[m]) * gradient /
-							(m_sNol[m][idx] * sqrt(m_gNol[m][idx]));
-					}
-				}
-				if (m_params->coefL1 != 0 || m_params->coefL2 != 0) {
-				for (size_t i = 0; i < dataPointIndeces.size(); i++)
-					m_lastUpdate[i] = tStep;
-				}
-				
-				for (int m = 0; m < m_params->m; m++) {
-					newDotProduct[m] = dataNormal.dot(m_weight[m]);
-				}
-			}
-			else {
-				DataPoint data = trData.getDataPoint(m_dataIndex[index]);
-				DataPoint dataNormal = data.normal(m_mean, m_std);
-				const vector<int>& dataPointIndeces = dataNormal.getDataIndeces();
-				const vector<float>& dataPointValues = dataNormal.getDataValues();
+                    for (int m = 0; m < m_params->m; m++) {
 
-				for (int m = 0; m < m_params->m; m++) {
-					
-					float dotProduct = dataNormal.dot(m_weight[m]);
-					float gradient_const = calcGradient(yhat[m], dotProduct);
-					for (size_t i = 0; i < dataPointIndeces.size(); i++) {
-						int idx = dataPointIndeces[i];
-						float val = dataPointValues[i];
-						float gradient = gradient_const * val;
-						m_weight[m][idx] -= alpha * gradient;
-					}
-				}
-								
-				for (int m = 0; m < m_params->m; m++) {
-					newDotProduct[m] = dataNormal.dot(m_weight[m]);
-				}				
-			}
+                        float dotProduct = dataNormal.dot(m_weight[m]);
+                        float gradient_const = calcGradient(yhat[m], dotProduct);
+                        for (size_t i = 0; i < dataPointIndeces.size(); i++) {
+                            int idx = dataPointIndeces[i];
+                            float val = dataPointValues[i];
+                            float gradient = gradient_const * val;
+                            m_weight[m][idx] -= alpha * gradient;
+                        }
+                    }
 
-			for (int m = 0; m < m_params->m; m++) {
-				newDotProduct[m] = min(max(newDotProduct[m], 0.0f), clip);
-				m_probAllVector[m] = (m_probAllVector[m] * (dataCounter - labelSize) +
-					labelSize * newDotProduct[m]) / (float)dataCounter;
+//                    for (int m = 0; m < m_params->m; m++) {
+//                        newDotProduct[m] = dataNormal.dot(m_weight[m]);
+//                    }
+                }
 
-				for (int l = 0; l < labelSize; l++) {
-					int k = labelVector[l];
-					m_probSingleVector[m][k] = (m_probSingleVector[m][k] *
-						(m_dataClassCounter[k] - 1) +
-						newDotProduct[m]) / (float)m_dataClassCounter[k];
-				}
-			}
-			
+//                for (int m = 0; m < m_params->m; m++) {
+//                    if (newDotProduct[m] > 0.5) {
+//                        for (int l = 0; l < labelSize; l++) {
+//                            int k = labelVector[l];
+//                            updateRanks(m_childrenLabelToRank[m], m_childrenLabelToIx[m], m_childrenIxToLabel[m],
+//                                        m_childrenSortedHist[m], m_childrenHistToIx[m], k);
+//                        }
+//                    }
+//                }
+            }
+        }
 
-		}
-	}
+    const float weightTreshold = weightMag;
 
-	const float weightTreshold = weightMag;
+    for (int m = 0; m < m_params->m; m++) {
+        for (int j = 0; j < d; j++) {
+            if ((m_params->coefL1 != 0 || m_params->coefL2 != 0) && m_lastUpdate[j] > 0) {
+                decayReg(m_weight[m][j], m_params->coefL1, m_params->coefL2, tStep - m_lastUpdate[j]);
+            }
+            if (fabs(m_weight[m][j]) < weightTreshold) {
+                m_weight[m][j] = 0.f;
+            }
+        }
+    }
 
-	for (int m = 0; m < m_params->m; m++) {
-		for (int j = 0; j < d; j++) {
-			if ((m_params->coefL1 != 0 || m_params->coefL2 != 0) && m_lastUpdate[j] > 0) {
-				decayReg(m_weight[m][j], m_params->coefL1, m_params->coefL2, tStep - m_lastUpdate[j]);
-			}
-			if (fabs(m_weight[m][j]) < weightTreshold) {
-				m_weight[m][j] = 0.f;
-			}
-		}
-	}
+    int currIx = m_params->k-1;
+    int histCount;
+    while (currIx>=0) {
+        delete m_labelToRank[m_ixToLabel[currIx]];
+        histCount = m_sortedHist[currIx];
+        currIx = m_histToIx[histCount] - 1;
+    }
+
+    for (int m = 0; m < m_params->m; m++) {
+        currIx = m_params->k-1;
+        while (currIx>=0) {
+            delete m_childrenLabelToRank[m][m_childrenIxToLabel[m][currIx]];
+            histCount = m_childrenSortedHist[m][currIx];
+            currIx = m_childrenHistToIx[m][histCount] - 1;
+        }
+    }
 }
 
 
@@ -353,8 +436,9 @@ int TreeNode::makeChildren(const DataLoader &trData, const DataLoader &trLabel, 
 
     for (int m = 0; m < m_params->m; m++) {
         m_children[m] = N + m;
-        int ch = m_children[m];
+        int ch = m_children[m]; //ToDo - Remove if useless
     }
+
 
     for (size_t index = 0; index < m_dataIndex.size(); index++) {
 		vector<float> dotProduct(m_params->m);
