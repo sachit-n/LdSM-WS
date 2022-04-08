@@ -63,16 +63,16 @@ int main(int argc, char* argv[])
     {
         cxxopts::Options options(argv[0], "Multilabel Options");
         options.add_options()
-            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("100"))
+            ("n,nmax", "maximum number of nodes", cxxopts::value<int>()->default_value("1000"))
             ("r1", "selecting r1 number of labels", cxxopts::value<int>()->default_value("1"))
             ("r2", "selecting r2 number of labels", cxxopts::value<int>()->default_value("3"))
             ("r3", "selecting r3 number of labels", cxxopts::value<int>()->default_value("5"))
-            ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("2"))
+            ("e,epochs", "number of epochs", cxxopts::value<int>()->default_value("10"))
             ("lr", "learning rate", cxxopts::value<float>()->default_value("0.1"))
-            ("path", "path of data set", cxxopts::value<string>()->default_value("../data2/wiki10samp/"))
-            ("name", "name of data set", cxxopts::value<string>()->default_value("wiki10"))
-            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
-            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/wiki10samp.dat"))
+            ("path", "path of data set", cxxopts::value<string>()->default_value("../data/amazonCat13Combined/"))
+            ("name", "name of data set", cxxopts::value<string>()->default_value("amz13"))
+            ("savelabel", "file name for saving labels", cxxopts::value<string>()->default_value("../results/amz13.dat"))
+            ("loadlabel", "file name for loading labels", cxxopts::value<string>()->default_value("../results/amz13.dat"))
             ("loadonly", "flag for loading the labels", cxxopts::value<bool>()->default_value("false"))
             ("mary", "arity of the tree", cxxopts::value<int>()->default_value("4"))
             ("l1", "lambda1: both term in the objective", cxxopts::value<float>()->default_value("1"))
@@ -88,9 +88,10 @@ int main(int argc, char* argv[])
             ("seed", "random number generator seed", cxxopts::value<int>()->default_value("0"))
             ("treeid", "tree ID", cxxopts::value<int>()->default_value("0"))
             ("ens", "ensemble size", cxxopts::value<int>()->default_value("1"))
-            ("revpct", "reveal percent of labels", cxxopts::value<string>()->default_value("0.8"))
-            ("c1", "weight of regressor 1 (user/document features)", cxxopts::value<int>()->default_value("1"))
-            ("c2", "weight of regressor 2 (item/label features)", cxxopts::value<int>()->default_value("0"))
+            ("revpct", "reveal percent of labels", cxxopts::value<string>()->default_value("0.2"))
+            ("c1", "weight of regressor 1 (user/document features)", cxxopts::value<float>()->default_value("1.0"))
+            ("c2", "weight of regressor 2 (item/label features)", 
+cxxopts::value<float>()->default_value("0.0"))
             ;
         auto result = options.parse(argc, argv);
         params.nMax = result["nmax"].as<int>();
@@ -114,8 +115,8 @@ int main(int argc, char* argv[])
         params.exampleLearn = result["xx"].as<bool>();
         params.entropyLoss = result["entropyLoss"].as<bool>();
         params.sparse = result["sparse"].as<bool>();
-        params.c1 = result["c1"].as<int>();
-        params.c2 = result["c2"].as<int>();
+        params.c1 = result["c1"].as<float>();
+        params.c2 = result["c2"].as<float>();
         seed = result["seed"].as<int>();
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
@@ -136,19 +137,18 @@ int main(int argc, char* argv[])
 	float raTime = 0.f;
     float loadTime = 0.f;
 
-	DataLoader teData(dataSetPath + dataSetName, false, "features");
-    DataLoader teLabel(dataSetPath + dataSetName, false, "labels");
-    DataLoader teRevLabel(dataSetPath + dataSetName, false, "revealed_labels", revpct);
-    DataLoader labelFeatures(dataSetPath + dataSetName, false, "label_embeddings");
+	DataLoader teData(dataSetPath, "features", false, revpct);
+    DataLoader teLabelHidden(dataSetPath, "hidden_labels", false, revpct);
+    DataLoader teLabelRevealed(dataSetPath, "revealed_labels", false, revpct);
+    DataLoader labelFeatures(dataSetPath, "label_embeddings");
 	cerr << "Loaded test data." << endl;
 
     labelEstPairAll teLabelEstPair;
     vector<int> rootLabelHist;
 
     if (!loadOnly) {
-        DataLoader trData(dataSetPath + dataSetName, true, "features");
-        DataLoader trLabel(dataSetPath + dataSetName, true, "labels");
-        DataLoader trRevLabel(dataSetPath + dataSetName, true, "revealed_labels", revpct);
+        DataLoader trData(dataSetPath, "features", true, revpct);
+        DataLoader trLabel(dataSetPath, "tr_labels", true, revpct);
 		cerr << "Loaded training data." << endl;
 
         params.d = max(teData.getDim(), trData.getDim());
@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
         tree.setParams(params);
 
         high_resolution_clock::time_point start_train = high_resolution_clock::now();
-        tree.buildTree(trData, trLabel, trRevLabel, labelFeatures);
+        tree.buildTree(trData, trLabel, labelFeatures);
 		tree.normalizeLableHist();
         high_resolution_clock::time_point end_train = high_resolution_clock::now();
         trTime = duration_cast<microseconds>(end_train - start_train).count() / 1000000.f;
@@ -171,11 +171,11 @@ int main(int argc, char* argv[])
 			meanDataLabel = loadmu("../results/mu_" + dataSetName); // meanDataLabel = tree.getMeanDataLabel(); 
 		
         high_resolution_clock::time_point start_test = high_resolution_clock::now();
-        tree.testBatch(teData, teRevLabel, labelFeatures);
+        tree.testBatch(teData, teLabelRevealed, labelFeatures); // Sends examples down the trees. Final output: "m_leafs" which is a vector containing leaf node ids for each datapoint
         vector<int> revLabels;
         for (int i = 0; i < teData.size(); i++) {
-            revLabels = teRevLabel.getDataPoint(i).getLabelVector();
-			teLabelEst.push_back(tree.testData(i, teData, meanDataLabel, revLabels));
+            revLabels = teLabelRevealed.getDataPoint(i).getLabelVector();
+			teLabelEst.push_back(tree.testData(i, teData, meanDataLabel, revLabels)); //Computes normalized label histogram/probabilities for the example.
         }
         high_resolution_clock::time_point end_test = high_resolution_clock::now();
         teTime = duration_cast<microseconds>(end_test - start_test).count() / 1000000.f;
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
         }
 		
         high_resolution_clock::time_point start_rank = high_resolution_clock::now();
-        for (int i = 0; i < teData.size(); i++) {
+        for (int i = 0; i < teData.size(); i++) { //ToDo: Why is this computed? As labels are loaded later anyway? Is it to measure time?
             Varray<float> singleEst = teLabelEst[i];
             labelEstPair signleEstPair;
             for (size_t i = 0; i < singleEst.myMap.index.size(); i++) {
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
     high_resolution_clock::time_point start_load = high_resolution_clock::now();
     teLabelEstPair.regular.clear();
     teLabelEstPair = labels.loadLabelEst(loadLabel, teData, meanDataLabel,
-    params.beta, params.gamma, rootLabelHist, treeId, nbTrees);
+    params.beta, params.gamma, rootLabelHist, treeId, nbTrees); //Computes top 5 labels for each datapoint using all trees if nbtrees>1
     high_resolution_clock::time_point end_load = high_resolution_clock::now();
     loadTime = duration_cast<microseconds>(end_load - start_load).count() / 1000000.f;
     cerr << "Loaded labels." << endl;
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
     Evaluator teEvaluateReg;
     vector<ScoreValue> teScoreValueReg;
     vector<int> R = { R1, R2, R3 };
-    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabel, teRevLabel, teLabelEstPair, rootLabelHist, R);
+    teScoreValueReg = teEvaluateReg.evaluate(teData, teLabelHidden, teLabelEstPair, rootLabelHist, R);
 
     cout << dataSetName << ", nmax = "
          << params.nMax << ", lr = " << params.alpha << ", m = " << params.m << ", e = " << params.epochs 

@@ -4,7 +4,7 @@ using namespace std;
 
 void savemu(vector<Varray<float>> mu, string strFile);
 
-void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, const DataLoader &labelFeatures)
+void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &labelFeatures)
 {
 
     m_nodes.resize(m_params.nMax, TreeNode(&m_params));
@@ -14,7 +14,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
     m_root->setRoot(m_root);
     m_root->setDepth(0);
     m_root->initialize();
-    multimap<int, int> nodesArray;
+    multimap<int, int> nodesArray; // sachit: https://www.cplusplus.com/reference/map/multimap/
     nodesArray.insert(pair<int, int>(0, m_root->m_nodeId));
 
     vector<int> dataIndexRoot(trData.size());
@@ -24,11 +24,11 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
     m_root->setDataIndex(dataIndexRoot); 
     rootLabelHistogram.resize(m_params.k, 0); 
     m_meanDataLabel.resize(m_params.k);
-    vector<forward_list<int>> idxListForLabel(m_params.k);
+    vector<forward_list<int>> idxListForLabel(m_params.k); //sachit: Singly-linked list: https://www.cplusplus.com/reference/forward_list/forward_list/
 
     for (size_t i = 0; i < dataIndexRoot.size(); i++) {
-        for (int j = 0; j < trLabel.getDataPoint(dataIndexRoot[i]).size(); j++) {
-            int k = trLabel.getDataPoint(dataIndexRoot[i]).getLabelVector()[j];
+        for (int j = 0; j < trLabel.getDataPoint(dataIndexRoot[i]).size(); j++) { //ToDo - changed
+            int k = trLabel.getDataPoint(dataIndexRoot[i]).getLabelVector()[j]; //ToDo - changed
             rootLabelHistogram[k] += 1;
             idxListForLabel[k].push_front(i);
         }
@@ -75,9 +75,9 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
                 m_nodes[n].meanStdCalc(trData);
             }
             // m_nodes[n].meanStdCalc(labelFeatures);
-            m_nodes[n].weightUpdate(trData, trLabel, trRevLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
+            m_nodes[n].weightUpdate(trData, trLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
    
-            int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, trRevLabel, labelFeatures, N, m_nodes);
+            int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, labelFeatures, N, m_nodes);
 
             N += numOfChildren;
             if (N == 1 || N == 11 || N == 101 || N == 1001 || N == 10001 || N == 100001 || N == 300001)
@@ -117,7 +117,7 @@ void Tree::normalizeLableHist() {
 	}
 }
 
-void Tree::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures) {
+void Tree::testBatch(const DataLoader &teData, const DataLoader &teLabelRevealed, const DataLoader &labelFeatures) {
 	m_leafs.resize(teData.size());
 	vector<int> dataIndexRoot(teData.size());
 	for (int i = 0; i < teData.size(); i++)
@@ -125,13 +125,13 @@ void Tree::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, con
 	m_root->setDataIndex(dataIndexRoot);
 
 	for (size_t n = 0; n < m_nodes.size(); n++) {
-		m_nodes[n].testBatch(teData, teRevLabel, labelFeatures, m_nodes, m_leafs);
+		m_nodes[n].testBatch(teData, teLabelRevealed, labelFeatures, m_nodes, m_leafs);
 	}
 }
 
 
 Varray<float> Tree::testData(int idx, const DataLoader &teData,
-	const vector<Varray<float>> &meanDataLabel, const vector<int> &revLabels) const {
+	const vector<Varray<float>> &meanDataLabel, const vector<int> &revLabels) const { //ToDo - What is const C++ used like this?
 	labelEst labelHistogramSum;
 	labelHistogramSum.regular.resize(m_params.k, 0.f);
 	int leafCount = m_leafs[idx].size();

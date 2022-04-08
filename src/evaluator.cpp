@@ -2,12 +2,12 @@
 
 using namespace std;
 
-vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, 
+vector<ScoreValue> Evaluator::evaluate(const DataLoader &teData, const DataLoader &teLabelHidden,
                                        const labelEstPairAll &labelEsimatePairAll,
                                        const vector<int> &rootLabelHist, const vector<int> &R) {
     
     // for propensity scores: TODO: names should be changed accordingly
-    string dataSetName = trData.getDataSetName();
+    string dataSetName = teData.getDataSetName();
     float A, B, C;
     if (dataSetName == "amazon" || dataSetName == "amazon3m") {
         A = 0.6f;
@@ -19,7 +19,7 @@ vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoade
         A = 0.55f;
         B = 1.5f;
     }
-    C = (float)(log(trData.size()) - 1.f)*pow((B + 1.f), A);
+    C = (float)(log(teData.size()) - 1.f)*pow((B + 1.f), A);
     vector<float> pScore(rootLabelHist.size());
     for (size_t k = 0; k < rootLabelHist.size(); k++) {
         pScore[k] = 1.f / (1.f + C*pow((rootLabelHist[k]+B), -A));
@@ -30,37 +30,21 @@ vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoade
     m_scoreValue.resize(R.size());
     for (size_t r = 0; r < R.size(); r++) {
         m_scoreValue[r].hamming = 0;
-        m_scoreVector[r].precisionVector.reserve(trData.size());
-        m_scoreVector[r].recallVector.reserve(trData.size());
-        m_scoreVector[r].nDCGVector.reserve(trData.size());
+        m_scoreVector[r].precisionVector.reserve(teData.size());
+        m_scoreVector[r].recallVector.reserve(teData.size());
+        m_scoreVector[r].nDCGVector.reserve(teData.size());
         
-        m_scoreVector[r].psPrecisionVector.reserve(trData.size());
-        m_scoreVector[r].psNDCGVector.reserve(trData.size());
-        m_scoreVector[r].psTruePrecisionVector.reserve(trData.size());
-        m_scoreVector[r].psTrueNDCGVector.reserve(trData.size());
+        m_scoreVector[r].psPrecisionVector.reserve(teData.size());
+        m_scoreVector[r].psNDCGVector.reserve(teData.size());
+        m_scoreVector[r].psTruePrecisionVector.reserve(teData.size());
+        m_scoreVector[r].psTrueNDCGVector.reserve(teData.size());
     }
 
-    for (int i = 0; i < trData.size(); i++) {
+    for (int i = 0; i < teData.size(); i++) {
         
         vector<pair<float, int> > labelEsimatePairRegular = labelEsimatePairAll.regular[i];
-        vector<int> labelTrue = trLabel.getDataPoint(i).getLabelVector();
-        vector<int> labelRev = trRevLabel.getDataPoint(i).getLabelVector();
-        int p1 = 0; // labelTrue index
-        int p2 = 0; //labelRev index
-        
-        while(p1<labelTrue.size() and p2<labelRev.size()) {
-            if (labelTrue[p1]==labelRev[p2]) {
-                labelTrue.erase(labelTrue.begin()+p1); //It was revealed already, remove
-                p2 += 1;
-            }
-            else if (labelTrue[p1]<labelRev[p2]) {
-                p1 += 1;
-            }
-            else {
-                p2 += 1;
-            }
-        }
-        
+        vector<int> labelTrue = teLabelHidden.getDataPoint(i).getLabelVector();
+
         vector<pair<float, int> > labelTruePair;
         for (size_t j = 0; j < labelTrue.size(); j++)
         {
@@ -117,7 +101,7 @@ vector<ScoreValue> Evaluator::evaluate(const DataLoader &trData, const DataLoade
     }
 
     for (size_t r = 0; r < R.size(); r++) {
-        m_scoreValue[r].hamming /= trData.size();
+        m_scoreValue[r].hamming /= teData.size();
         m_scoreValue[r].precision = 0;
         m_scoreValue[r].recall = 0;
         m_scoreValue[r].nDCG = 0;

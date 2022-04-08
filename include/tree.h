@@ -21,7 +21,7 @@ class Tree {
 	int m_treeSize;
     TreeParams m_params;
     vector<vector<int>> m_leafs;
-    vector<int> rootLabelHistogram;
+    vector<int> rootLabelHistogram; //ToDo - sachit: why not prefixed by m_? can refactor
 	vector<Varray<float>> m_meanDataLabel;
 
 public:
@@ -35,11 +35,11 @@ public:
 	
 	void setParams(TreeParams params) { m_params = params; };
 
-	void buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, const DataLoader &labelFeatures);
+	void buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &labelFeatures);
 	
 	void normalizeLableHist();
 
-    void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures);
+    void testBatch(const DataLoader &teData, const DataLoader &teLabelRevealed, const DataLoader &labelFeatures);
 
 	Varray<float> testData(int idx, const DataLoader &teData, 
 		const vector<Varray<float>> &meanDataLabel, const vector<int> &revLabels) const;

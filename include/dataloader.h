@@ -17,9 +17,9 @@ class DataLoader {
 private:
 
     string m_dataSetPath;
-    string m_dataSetName; 
-    bool m_trainFlag; 
+    string m_dataSetName;
     string m_kind;
+    bool m_trainFlag;
     string m_revpct;
     vector<DataPoint> m_dataPoints;
     int m_dim; // feature dimension: only for data
@@ -27,7 +27,7 @@ private:
 
 public:
 
-    DataLoader(string dataSetPath, bool trainFlag, const string& kind, const string& revpct="0");
+    DataLoader(string dataSetPath, const string& kind, const bool trainFlag=false, const string& revpct="0");
 
     inline const DataPoint& getDataPoint(int j) const { return m_dataPoints[j]; }
 

@@ -3,3 +3,5 @@ results/
 .vscode/
 .DS_Store
 data2/
+*.txt
+*.csv

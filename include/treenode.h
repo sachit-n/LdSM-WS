@@ -31,8 +31,8 @@ struct TreeParams {
     float coefL1;
     float coefL2;
     bool exampleLearn;
-    int c1; //weight of regressor 1 that is based on document features
-    int c2; //weight of regressor 2 that is based on label features
+    float c1; //weight of regressor 1 that is based on document features
+    float c2; //weight of regressor 2 that is based on label features
 };
 
 class TreeNode {
@@ -73,15 +73,15 @@ public:
 
     void meanStdCalc(const DataLoader &trData);
 
-	void weightUpdate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &teRevLabel, const DataLoader &labelFeatures, 
+	void weightUpdate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &labelFeatures,
 		vector<int>& rooLabelHist, int maxLabelRoot);
 
-	int makeChildren(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &teRevLabel, const DataLoader &labelFeatures,
+	int makeChildren(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &labelFeatures,
 		const int& N, vector<TreeNode>& nodes);
 		
     void destroyChildren(vector<TreeNode>& nodes); 
 
-    void testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures, vector<TreeNode>& nodes, 
+    void testBatch(const DataLoader &teData, const DataLoader &teLabelRevealed, const DataLoader &labelFeatures, vector<TreeNode>& nodes,
                          vector<vector<int>>& leafs);
 
     void addHistogram(labelEst& labelHistogramSum, int leafCount, const vector<int> &revLabels) const;
