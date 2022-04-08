@@ -40,7 +40,7 @@ void TreeNode::initialize() {
 }
 
 //removed argument trLabel from this function as it is not used
-void TreeNode::meanStdCalc(const DataLoader &trData) { // only for non-sparse data 
+void TreeNode::meanStdCalc(const DataLoader &trData) { // only for non-sparse data
 
 	int dim = trData.getDim();
 	int dataIndexSize = m_dataIndex.size();
@@ -77,7 +77,7 @@ void TreeNode::meanStdCalc(const DataLoader &trData) { // only for non-sparse da
 		m_std[i] = sqrt(m_std[i] / (dataIndexSize - 1));
 	}
 	m_std[dim - 1] = 1.f;
-	
+
 }
 
 float gradAbsoluteLoss(int label, float prediction) {
@@ -111,14 +111,14 @@ void decayReg(float &weight, float coefL1, float coefL2, int stepsCount) {
 
 void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &trRevLabel, const DataLoader &labelFeatures,
 	vector<int>& rooLabelHist, int maxLabelRoot) {
-	
+
 	std::function<float(int, float)> calcGradient;
 	if (m_params->entropyLoss)
 		calcGradient = gradEntropyLoss;
 	else
 		calcGradient = gradAbsoluteLoss;
 
-	int d = m_params->d; 
+	int d = m_params->d;
 	int embSize = m_params->embSize;
 	float clip = 1; // for clipping data.dot(weight)
 
@@ -142,7 +142,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			m_weight2[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag2;
 	}
 
-	int dataCounter = 0; 
+	int dataCounter = 0;
 
 	float J; // objective function initialization
 	vector<int> yhat; // regressors' label
@@ -189,7 +189,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 							(m_dataClassCounter[k] - 1) + tmpYhat[m]) /
 							(float)m_dataClassCounter[k];
 					}
-				} 
+				}
 
 				float tmpBalance = 0.0;
 				for (int m1 = 0; m1 < m_params->m; m1++) {
@@ -285,7 +285,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 				for (size_t i = 0; i < dataPointIndeces.size(); i++)
 					m_lastUpdate[i] = tStep;
 				}
-				
+
 				for (int m = 0; m < m_params->m; m++) {
 					newDotProduct1[m] = dataNormal.dot(m_weight1[m]);
 				}
@@ -297,7 +297,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 				const vector<float>& dataPointValues = dataNormal.getDataValues();
 
 				for (int m = 0; m < m_params->m; m++) {
-					
+
 					float dotProduct1 = dataNormal.dot(m_weight1[m]);
 					float gradient_const = calcGradient(yhat[m], dotProduct1);
 					for (size_t i = 0; i < dataPointIndeces.size(); i++) {
@@ -307,10 +307,10 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 						m_weight1[m][idx] -= alpha * gradient;
 					}
 				}
-								
+
 				for (int m = 0; m < m_params->m; m++) {
 					newDotProduct1[m] = dataNormal.dot(m_weight1[m]);
-				}				
+				}
 			}
 			// Train regressor 2 using SGD based on optimal directions to send example
 			DataPoint revLabels = trRevLabel.getDataPoint(m_dataIndex[index]);
@@ -319,7 +319,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			const vector<int>& dataPointIndeces2 = data2.getDataIndeces();
 			const vector<float>& dataPointValues2 = data2.getDataValues();
 			for (int m = 0; m < m_params->m; m++) {
-				
+
 				float dotProduct2 = data2.dot(m_weight2[m]);
 				float gradient_const2 = calcGradient(yhat[m], dotProduct2);
 				for (size_t i = 0; i < dataPointIndeces2.size(); i++) {
@@ -332,7 +332,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			for (int m = 0; m < m_params->m; m++) {
 					newDotProduct2[m] = data2.dot(m_weight2[m]);
 				}
-			// Take the sum of the two dot products	
+			// Take the sum of the two dot products
 			for (int m = 0; m < m_params->m; m++) {
 				newDotProduct[m] = m_params->c1*newDotProduct1[m] + m_params->c2*newDotProduct2[m];
 			}
@@ -349,7 +349,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 						newDotProduct[m]) / (float)m_dataClassCounter[k];
 				}
 			}
-			
+
 
 		}
 	}
@@ -417,7 +417,7 @@ int TreeNode::makeChildren(const DataLoader &trData, const DataLoader &trLabel, 
 		}
         vector<int> childIndicator(m_params->m, 0);
         for (int m = 0; m < m_params->m; m++) {
-            
+
 			int ch = m_children[m];
             if (dotProduct[m] >= 0.5) {
                 childIndicator[m] = 1;
@@ -478,7 +478,7 @@ int TreeNode::makeChildren(const DataLoader &trData, const DataLoader &trLabel, 
     return m_params->m;
 }
 
-void TreeNode::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures, vector<TreeNode>& nodes, 
+void TreeNode::testBatch(const DataLoader &teData, const DataLoader &teRevLabel, const DataLoader &labelFeatures, vector<TreeNode>& nodes,
                          vector<vector<int>>& leafs) {
 
     if (isLeaf()) {
@@ -539,7 +539,7 @@ void TreeNode::testBatch(const DataLoader &teData, const DataLoader &teRevLabel,
             }
         }
     }
-	
+
     m_dataIndex.clear();
     m_dataIndex.resize(1);
     m_dataIndex.shrink_to_fit();
@@ -566,14 +566,14 @@ void TreeNode::normalizeLabelHist() {
 		sumLabel += m_labelHistogramSparse.myMap.value[i];
 
 	for (size_t i = 0; i < m_labelHistogramSparse.myMap.index.size(); i++) {
-		m_NormalLabelHistogramSparse.push_back(make_pair(m_labelHistogramSparse.myMap.index[i], 
+		m_NormalLabelHistogramSparse.push_back(make_pair(m_labelHistogramSparse.myMap.index[i],
 			(float)m_labelHistogramSparse.myMap.value[i] / sumLabel));
 	}
 }
 
 //ToDo - Test this function
 DataPoint TreeNode::combineEmbeddings(const DataPoint& labels, const DataLoader& labelFeatures) {
-    
+
 	const vector<int>& labelIndeces = labels.getLabelVector();
     int nLabels = labels.size();
 
@@ -582,7 +582,7 @@ DataPoint TreeNode::combineEmbeddings(const DataPoint& labels, const DataLoader&
 	std::iota (std::begin(lfIndeces), std::end(lfIndeces), 0); //Create vector [0,1,2,...,emb_size-1]. ToDo - test this works as expected
 
 	// Adding embedding vectors of the revealed labels
-    vector<float> lfValues(m_params->embSize, 0.0); 
+    vector<float> lfValues(m_params->embSize, 0.0);
     for (int l = 0; l < nLabels; l++) {
         int k = labelIndeces[l]; //class index
         const vector<float> labelFeature = labelFeatures.getDataPoint(k).getDataValues(); //embedding of class index . ToDo - Test this works as expected
@@ -591,11 +591,11 @@ DataPoint TreeNode::combineEmbeddings(const DataPoint& labels, const DataLoader&
 
 	// Calculating the norm of the combined label feature vector, and dividing lfValues by its norm. ToDo - Test it works as expected
 	float lfNorm = sqrt(inner_product(lfValues.begin(), lfValues.end(), lfValues.begin(), 0.0L));
-	
+
 	float mltp = 1/lfNorm;
 	std::transform(lfValues.begin(), lfValues.end(), lfValues.begin(),
                std::bind(std::multiplies<float>(), std::placeholders::_1, mltp));
-	
+
 	//Last feature has to be 1 for bias
 	lfValues[m_params->embSize-1] = 1;
 
