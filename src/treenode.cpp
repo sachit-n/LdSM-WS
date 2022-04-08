@@ -134,6 +134,9 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			m_weight[m][j] = ((float)(rand() - RAND_MAX / 2) / RAND_MAX) * weightMag;
 	}
 
+
+    if (m_nodeId==0) cerr<<"root 11th feature weights"<<endl<<m_weight[0][10]<<endl<<m_weight[1][10]<<endl;
+
 	int dataCounter = 0; 
 
 	float J; // objective function initialization

@@ -57,7 +57,7 @@ private:
 
 public:
 
-	int m_nodeId;
+	int m_nodeId
     vector<int> m_children;
     Varray<int> m_labelHistogramSparse;
 	vector<pair<int, float>> m_NormalLabelHistogramSparse;
@@ -101,6 +101,8 @@ public:
     int getChild(int m) { return m_children[m]; }
 
     void setDataIndex(vector<int> x) { m_dataIndex = x; }
+
+    int getDataIndex(int ix) { return m_dataIndex[ix]; }
 
     void setLabelHistogramSparse(vector<int> x) { m_labelHistogramSparse.set(x); }
 
