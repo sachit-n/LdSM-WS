@@ -1,5 +1,6 @@
 #include "treenode.h"
 #include <float.h>
+#include <limits>
 
 using namespace std;
 
@@ -181,12 +182,16 @@ void TreeNode::updateRanks(vector<int*>& labelToRank, vector<int>& labelToIx, ve
 }
 
 float TreeNode::getNDCG(vector<int*>& labelToRank, const vector<int>& labelVector) {
+    auto gen = std::bind(std::uniform_int_distribution<>(0, 1), std::default_random_engine());
     int labelSize = labelVector.size();
     float nDCG = 0;
     for (int l = 0; l < labelSize; l++) {
         int k = labelVector[l];
         int rank = *labelToRank[k]+1;
-        nDCG += 1/log2(1+rank);
+        // add random condition
+        if (gen()) {
+            if (gen()) nDCG += 1/log2(1+rank);
+        }
     }
     return nDCG;
 }
@@ -285,22 +290,22 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
                 if (max_m == -1) { //parent node nDCG max - send to all children
                     for (int mm = 0; mm < m_params->m; mm++) {
                         yhat[mm] = 1;
-                        for (int l = 0; l < labelSize; l++) {
-                            int k = labelVector[l];
-                            updateRanks(m_childrenLabelToRank[mm], m_childrenLabelToIx[mm], m_childrenIxToLabel[mm],
-                                        m_childrenSortedHist[mm], m_childrenHistToIx[mm], k);
-                        }
+//                        for (int l = 0; l < labelSize; l++) {
+//                            int k = labelVector[l];
+//                            updateRanks(m_childrenLabelToRank[mm], m_childrenLabelToIx[mm], m_childrenIxToLabel[mm],
+//                                        m_childrenSortedHist[mm], m_childrenHistToIx[mm], k);
+//                        }
                     }
                 } else {
                     for (int mm = 0; mm < m_params->m; mm++) {
                         yhat[mm] = 0;
                     }
                     yhat[max_m] = 1;
-                    for (int l = 0; l < labelSize; l++) {
-                        int k = labelVector[l];
-                        updateRanks(m_childrenLabelToRank[max_m], m_childrenLabelToIx[max_m], m_childrenIxToLabel[max_m],
-                                    m_childrenSortedHist[max_m], m_childrenHistToIx[max_m], k);
-                    }
+//                    for (int l = 0; l < labelSize; l++) {
+//                        int k = labelVector[l];
+//                        updateRanks(m_childrenLabelToRank[max_m], m_childrenLabelToIx[max_m], m_childrenIxToLabel[max_m],
+//                                    m_childrenSortedHist[max_m], m_childrenHistToIx[max_m], k);
+//                    }
                 }
 
                 vector<float> newDotProduct(m_params->m);
@@ -369,20 +374,35 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
                         }
                     }
 
-//                    for (int m = 0; m < m_params->m; m++) {
-//                        newDotProduct[m] = dataNormal.dot(m_weight[m]);
-//                    }
+                    for (int m = 0; m < m_params->m; m++) {
+                        newDotProduct[m] = dataNormal.dot(m_weight[m]);
+                    }
                 }
 
-//                for (int m = 0; m < m_params->m; m++) {
-//                    if (newDotProduct[m] > 0.5) {
-//                        for (int l = 0; l < labelSize; l++) {
-//                            int k = labelVector[l];
-//                            updateRanks(m_childrenLabelToRank[m], m_childrenLabelToIx[m], m_childrenIxToLabel[m],
-//                                        m_childrenSortedHist[m], m_childrenHistToIx[m], k);
-//                        }
-//                    }
-//                }
+                bool noneDirection = true;
+                float maxDotP = -FLT_MAX;
+                max_m = -1;
+                for (int m = 0; m < m_params->m; m++) {
+                    if (newDotProduct[m]>maxDotP) {
+                        maxDotP = newDotProduct[m];
+                        max_m = m;
+                    }
+                    if (newDotProduct[m] > 0.5) {
+                        noneDirection = false;
+                        for (int l = 0; l < labelSize; l++) {
+                            int k = labelVector[l];
+                            updateRanks(m_childrenLabelToRank[m], m_childrenLabelToIx[m], m_childrenIxToLabel[m],
+                                        m_childrenSortedHist[m], m_childrenHistToIx[m], k);
+                        }
+                    }
+                }
+                if (noneDirection) {
+                    for (int l = 0; l < labelSize; l++) {
+                        int k = labelVector[l];
+                        updateRanks(m_childrenLabelToRank[max_m], m_childrenLabelToIx[max_m], m_childrenIxToLabel[max_m],
+                                    m_childrenSortedHist[max_m], m_childrenHistToIx[max_m], k);
+                    }
+                }
             }
         }
 
