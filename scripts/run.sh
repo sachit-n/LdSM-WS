@@ -6,7 +6,7 @@ name=delicious
 dataPath=../data/$name/
 labelPath=../results/label_$name.dat
 
-num_t=1
+num_t=10
 m=2
 nmax=1000
 epoch=20
