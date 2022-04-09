@@ -57,7 +57,7 @@ private:
 
 public:
 
-	int m_nodeId
+	int m_nodeId;
     vector<int> m_children;
     Varray<int> m_labelHistogramSparse;
 	vector<pair<int, float>> m_NormalLabelHistogramSparse;
