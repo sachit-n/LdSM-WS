@@ -6,7 +6,10 @@ void savemu(vector<Varray<float>> mu, string strFile);
 
 struct RNG {
     int operator() (int n) {
-        return std::rand() % n;
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> distn(0,n);
+        return distn(rng);
     }
 };
 
