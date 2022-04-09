@@ -8,8 +8,8 @@ labelPath=../results/label_$name.dat
 
 num_t=10
 m=2
-nmax=1000
-epoch=1
+nmax=32000
+epoch=20
 lr=0.1
 l1=1
 l2=2

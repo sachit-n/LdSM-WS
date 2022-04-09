@@ -4,6 +4,12 @@ using namespace std;
 
 void savemu(vector<Varray<float>> mu, string strFile);
 
+struct RNG {
+    int operator() (int n) {
+        return std::rand() % n;
+    }
+};
+
 void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
 {
 
@@ -20,7 +26,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
     vector<int> dataIndexRoot(trData.size());
     for (int i = 0; i < trData.size(); i++)
         dataIndexRoot[i] = i;
-    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end());
+    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end(), RNG());
     m_root->setDataIndex(dataIndexRoot); 
     rootLabelHistogram.resize(m_params.k, 0); 
     m_meanDataLabel.resize(m_params.k);
