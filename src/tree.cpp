@@ -1,8 +1,19 @@
 #include "tree.h"
+#include <random>
 
 using namespace std;
 
 void savemu(vector<Varray<float>> mu, string strFile);
+
+struct RNG {
+    int operator() (int n) {
+//        std::random_device dev;
+//        std::mt19937 rng(dev());
+//        std::uniform_int_distribution<std::mt19937::result_type> distn(0,n);
+//        return distn(rng);
+        return std::rand() % n;
+    }
+};
 
 void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
 {
@@ -20,7 +31,9 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel)
     vector<int> dataIndexRoot(trData.size());
     for (int i = 0; i < trData.size(); i++)
         dataIndexRoot[i] = i;
-    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end());
+    srand(0);
+    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end(), RNG());
+    srand(m_params.seed);
     m_root->setDataIndex(dataIndexRoot); 
     rootLabelHistogram.resize(m_params.k, 0); 
     m_meanDataLabel.resize(m_params.k);

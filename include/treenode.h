@@ -30,6 +30,7 @@ struct TreeParams {
     float coefL1;
     float coefL2;
     bool exampleLearn;
+    int seed;
 };
 
 class TreeNode {

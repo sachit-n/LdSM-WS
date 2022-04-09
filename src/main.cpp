@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
         params.exampleLearn = result["xx"].as<bool>();
         params.entropyLoss = result["entropyLoss"].as<bool>();
         params.sparse = result["sparse"].as<bool>();
-        seed = result["seed"].as<int>();
+        params.seed = result["seed"].as<int>();
         treeId = result["treeid"].as<int>();
         nbTrees = result["ens"].as<int>();
     }
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
     
-	srand(seed);
+//	srand(seed);
 
     int treeSize = 0;
     int treeDepth = 0;
