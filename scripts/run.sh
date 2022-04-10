@@ -1,14 +1,14 @@
 #!/bin/bash
-cd ../cmake-build-debug
+cd ../build
 
 # data set name and path for loading data and saving label
 name=delicious
 dataPath=../data/$name/
 labelPath=../results/label_$name.dat
 
-num_t=10
+num_t=50
 m=2
-nmax=32000
+nmax=64000
 epoch=20
 lr=0.1
 l1=1
