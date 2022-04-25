@@ -8,7 +8,7 @@ labelPath=../results/label_$name.dat
 
 num_t=50
 m=2
-nmax=64000
+nmax=32000
 epoch=20
 lr=0.1
 l1=1
