@@ -4,6 +4,17 @@ using namespace std;
 
 void savemu(vector<Varray<float>> mu, string strFile);
 
+struct RNG {
+    int operator() (int n) {
+//        std::random_device dev;
+//        std::mt19937 rng(dev());
+//        std::uniform_int_distribution<std::mt19937::result_type> distn(0,n);
+//        return distn(rng);
+        return std::rand() % n;
+    }
+};
+
+
 void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const DataLoader &labelFeatures)
 {
 
@@ -20,7 +31,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
     vector<int> dataIndexRoot(trData.size());
     for (int i = 0; i < trData.size(); i++)
         dataIndexRoot[i] = i;
-    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end());
+    random_shuffle(dataIndexRoot.begin(), dataIndexRoot.end(), RNG());
     m_root->setDataIndex(dataIndexRoot); 
     rootLabelHistogram.resize(m_params.k, 0); 
     m_meanDataLabel.resize(m_params.k);
@@ -75,6 +86,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
                 m_nodes[n].meanStdCalc(trData);
             }
             // m_nodes[n].meanStdCalc(labelFeatures);
+            cerr << "Loaded training data." << endl;
             m_nodes[n].weightUpdate(trData, trLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
    
             int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, labelFeatures, N, m_nodes);

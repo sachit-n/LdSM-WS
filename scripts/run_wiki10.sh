@@ -2,14 +2,14 @@
 cd ../build
 
 # data set name and path for loading data and saving label
-name=wiki10
-dataPath=../data2/$name/
+name=wiki10_31k
+dataPath=../preprocess_data/warm_start_data/$name/
 labelPath=../results/label_$name.dat
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -20,7 +20,7 @@ entropy=true
 sparse=true
 c1=1
 c2=1
-revpct=0.2
+revpct=20
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -37,9 +37,9 @@ done
 
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -50,7 +50,7 @@ entropy=true
 sparse=true
 c1=1
 c2=1
-revpct=0.4
+revpct=40
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -66,9 +66,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -79,7 +79,7 @@ entropy=true
 sparse=true
 c1=1
 c2=1
-revpct=0.6
+revpct=60
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -95,9 +95,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -108,7 +108,7 @@ entropy=true
 sparse=true
 c1=1
 c2=1
-revpct=0.8
+revpct=80
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -124,9 +124,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -137,7 +137,7 @@ entropy=true
 sparse=true
 c1=1
 c2=0
-revpct=0.2
+revpct=20
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -153,9 +153,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -166,7 +166,7 @@ entropy=true
 sparse=true
 c1=1
 c2=0
-revpct=0.4
+revpct=40
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -182,9 +182,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -195,7 +195,7 @@ entropy=true
 sparse=true
 c1=1
 c2=0
-revpct=0.6
+revpct=60
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
@@ -211,9 +211,9 @@ done
 --sparse=$sparse --entropyLoss=$entropy --ens=$num_t --c1=$c1 --c2=$c2 --revpct=$revpct
 
 num_t=20
-m=4
-nmax=1000
-epoch=10
+m=2
+nmax=2000
+epoch=20
 lr=0.1
 l1=1
 l2=2
@@ -224,7 +224,7 @@ entropy=true
 sparse=true
 c1=1
 c2=0
-revpct=0.8
+revpct=80
 
 # training, testing and saving the labels
 for ((i=0;i<$num_t;i++));
