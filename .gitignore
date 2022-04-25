@@ -2,6 +2,7 @@ build/
 results/
 .vscode/
 .DS_Store
+.idea/
 data2/
 *.txt
 *.csv
