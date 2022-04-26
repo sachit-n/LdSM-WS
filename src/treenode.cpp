@@ -243,7 +243,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
         m_labelToRank[j] = initRankParent;
     }
 
-    cerr << "...." << endl;
+//    cerr << "...." << endl;
 
     for (size_t index = 0; index < m_dataIndex.size(); index++) {
         const vector<int> &labelVector = trLabel.getDataPoint(m_dataIndex[index]).getLabelVector();
@@ -254,7 +254,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
         }
     }
 
-    cerr << "xxxx" << endl;
+//    cerr << "xxxx" << endl;
 
 	const float weightMag = 1.f / m_params->d;
 	const float weightMag2 = 1.f / m_params->embSize;
@@ -273,11 +273,16 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 	int tStep = 0;
 	for (int e = 0; e < m_params->epochs; e++) {
 		for (size_t index = 0; index < m_dataIndex.size(); index++) {
-			tStep++;
+
+            tStep++;
 
 			float lrWeight = 0.0;
 			const vector<int>& labelVector = trLabel.getDataPoint(m_dataIndex[index]).getLabelVector(); //ToDo: changed
 			int labelSize = labelVector.size();
+            if (labelSize==0) {
+//                cerr<<m_dataIndex[index]<<endl;
+                continue;
+            }
             float alpha = m_params->alpha;
 
             float maxNDCG = getNDCG(m_labelToRank, labelVector);
@@ -442,7 +447,7 @@ void TreeNode::weightUpdate(const DataLoader &trData, const DataLoader &trLabel,
 			
 
 		}
-        cerr << "zzzz" << endl;
+//        cerr << "zzzz" << endl;
 	}
 
 	const float weightTreshold = weightMag;

@@ -86,7 +86,7 @@ void Tree::buildTree(const DataLoader &trData, const DataLoader &trLabel, const 
                 m_nodes[n].meanStdCalc(trData);
             }
             // m_nodes[n].meanStdCalc(labelFeatures);
-            cerr << "Loaded training data." << endl;
+//            cerr << "Loaded training data." << endl;
             m_nodes[n].weightUpdate(trData, trLabel, labelFeatures, rootLabelHistogram, maxLabelRoot);
    
             int numOfChildren = m_nodes[n].makeChildren(trData, trLabel, labelFeatures, N, m_nodes);
